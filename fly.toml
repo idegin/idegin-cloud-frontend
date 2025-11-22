@@ -1,0 +1,33 @@
+# fly.toml app configuration file for iDegin Cloud Frontend
+
+app = 'idegin-cloud-frontend'
+primary_region = 'iad'
+
+[build]
+
+[build.args]
+  NEXT_PUBLIC_API_URL = 'https://idegin-cloud-backend.fly.dev/api/v1/private'
+
+[env]
+  NODE_ENV = 'production'
+  PORT = '8080'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '30s'
+    grace_period = '60s'
+    method = 'GET'
+    path = '/api/health'
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1

@@ -1,0 +1,14 @@
+# .dockerignore
+node_modules
+.next
+.git
+.gitignore
+.env*.local
+README.md
+*.md
+.vscode
+.idea
+dist
+build
+coverage
+.cache
