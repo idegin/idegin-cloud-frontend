@@ -1,0 +1,1 @@
+# idegin-cloud-frontend
