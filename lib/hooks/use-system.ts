@@ -1,11 +1,11 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { systemApi } from "@/lib/api/system"
+import { systemApi, TimePeriod } from "@/lib/api/system"
 
-export function usePlatformOverview(year?: number) {
+export function usePlatformOverview(period: TimePeriod = "year") {
   return useQuery({
-    queryKey: ["platform-overview", year],
-    queryFn: () => systemApi.getOverview(year),
+    queryKey: ["platform-overview", period],
+    queryFn: () => systemApi.getOverview(period),
   })
 }

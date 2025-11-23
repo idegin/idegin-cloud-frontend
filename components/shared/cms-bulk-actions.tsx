@@ -2,8 +2,15 @@
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Trash2, Copy, Archive, X } from "lucide-react"
+import { Trash2, Copy, Archive, X, LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+
+interface CustomAction {
+    label: string
+    onClick: () => void
+    icon: LucideIcon
+    variant?: "outline" | "destructive"
+}
 
 interface CMSBulkActionsProps {
     selectedCount: number
@@ -11,6 +18,7 @@ interface CMSBulkActionsProps {
     onDelete?: () => void
     onDuplicate?: () => void
     onArchive?: () => void
+    actions?: CustomAction[]
     className?: string
 }
 
@@ -20,6 +28,7 @@ export function CMSBulkActions({
     onDelete,
     onDuplicate,
     onArchive,
+    actions,
     className,
 }: CMSBulkActionsProps) {
     if (selectedCount === 0) return null
@@ -63,6 +72,22 @@ export function CMSBulkActions({
                                 Archive
                             </Button>
                         )}
+
+                        {actions?.map((action, index) => {
+                            const Icon = action.icon
+                            return (
+                                <Button
+                                    key={index}
+                                    variant={action.variant || "outline"}
+                                    size="sm"
+                                    onClick={action.onClick}
+                                    className="gap-2"
+                                >
+                                    <Icon className="h-4 w-4" />
+                                    {action.label}
+                                </Button>
+                            )
+                        })}
 
                         {onDelete && (
                             <Button

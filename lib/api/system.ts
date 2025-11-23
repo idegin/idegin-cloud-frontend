@@ -1,5 +1,7 @@
 import { apiClient } from "@/lib/api-client"
 
+export type TimePeriod = "week" | "month" | "year" | "all";
+
 export interface PlatformMetrics {
   totalOrganizations: number
   totalProjects: number
@@ -11,24 +13,23 @@ export interface PlatformMetrics {
   subscriptionsGrowth: number
 }
 
-export interface MonthlyRevenue {
-  month: string
+export interface RevenueData {
+  period: string
   revenue: number
   transactions: number
 }
 
 export interface PlatformOverview {
   metrics: PlatformMetrics
-  revenueData: MonthlyRevenue[]
-  year: number
+  revenueData: RevenueData[]
+  period: TimePeriod
 }
 
 export const systemApi = {
-  getOverview: async (year?: number) => {
-    const params = year ? { year } : {}
+  getOverview: async (period: TimePeriod = "year") => {
     const response = await apiClient.get<{ success: boolean; data: PlatformOverview }>(
       "/system/overview",
-      { params }
+      { params: { period } }
     )
     return response.data.data
   },

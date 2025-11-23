@@ -9,13 +9,21 @@ import {
     TrendingUp,
     TrendingDown,
 } from "lucide-react"
-import type { PlatformMetrics } from "@/lib/api/system"
+import type { PlatformMetrics, TimePeriod } from "@/lib/api/system"
 
 interface MetricsCardsProps {
     metrics: PlatformMetrics
+    period: TimePeriod
 }
 
-export function MetricsCards({ metrics }: MetricsCardsProps) {
+const PERIOD_LABELS: Record<TimePeriod, string> = {
+    week: "vs last week",
+    month: "vs last month",
+    year: "vs last year",
+    all: "all-time",
+}
+
+export function MetricsCards({ metrics, period }: MetricsCardsProps) {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("en-NG", {
             style: "currency",
@@ -23,6 +31,9 @@ export function MetricsCards({ metrics }: MetricsCardsProps) {
             minimumFractionDigits: 0,
         }).format(amount)
     }
+
+    const periodLabel = PERIOD_LABELS[period]
+    const showGrowth = period !== "all"
 
     const metricCards = [
         {
@@ -50,7 +61,7 @@ export function MetricsCards({ metrics }: MetricsCardsProps) {
             iconColor: "text-amber-600",
             iconBg: "bg-amber-500/10",
             growth: metrics.revenueGrowth,
-            description: "All-time earnings",
+            description: period === "all" ? "All-time earnings" : "Period earnings",
         },
         {
             title: "Active Subscriptions",
@@ -82,24 +93,31 @@ export function MetricsCards({ metrics }: MetricsCardsProps) {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{metric.value}</div>
-                            <div className="flex items-center gap-1 mt-1">
-                                <GrowthIcon
-                                    className={`h-3 w-3 ${
-                                        isPositive ? "text-green-600" : "text-red-600"
-                                    }`}
-                                />
-                                <span
-                                    className={`text-xs font-medium ${
-                                        isPositive ? "text-green-600" : "text-red-600"
-                                    }`}
-                                >
-                                    {isPositive ? "+" : ""}
-                                    {metric.growth}%
-                                </span>
-                                <span className="text-xs text-muted-foreground ml-1">
+                            {showGrowth && (
+                                <div className="flex items-center gap-1 mt-1">
+                                    <GrowthIcon
+                                        className={`h-3 w-3 ${
+                                            isPositive ? "text-green-600" : "text-red-600"
+                                        }`}
+                                    />
+                                    <span
+                                        className={`text-xs font-medium ${
+                                            isPositive ? "text-green-600" : "text-red-600"
+                                        }`}
+                                    >
+                                        {isPositive ? "+" : ""}
+                                        {metric.growth}%
+                                    </span>
+                                    <span className="text-xs text-muted-foreground ml-1">
+                                        {periodLabel}
+                                    </span>
+                                </div>
+                            )}
+                            {!showGrowth && (
+                                <p className="text-xs text-muted-foreground mt-1">
                                     {metric.description}
-                                </span>
-                            </div>
+                                </p>
+                            )}
                         </CardContent>
                     </Card>
                 )

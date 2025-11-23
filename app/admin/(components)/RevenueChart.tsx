@@ -2,15 +2,25 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import type { MonthlyRevenue } from "@/lib/api/system"
+import type { RevenueData, TimePeriod } from "@/lib/api/system"
 
 interface RevenueChartProps {
-    revenueData: MonthlyRevenue[]
-    year: number
+    revenueData: RevenueData[]
+    period: TimePeriod
 }
 
-export function RevenueChart({ revenueData, year }: RevenueChartProps) {
+const PERIOD_TITLES: Record<TimePeriod, string> = {
+    week: "Daily Revenue - This Week",
+    month: "Daily Revenue - This Month",
+    year: "Monthly Revenue - This Year",
+    all: "Yearly Revenue - All Time",
+}
+
+export function RevenueChart({ revenueData, period }: RevenueChartProps) {
     const formatCurrency = (value: number) => {
+        if (value >= 1000000) {
+            return `₦${(value / 1000000).toFixed(1)}M`
+        }
         return `₦${(value / 1000).toFixed(0)}K`
     }
 
@@ -18,7 +28,7 @@ export function RevenueChart({ revenueData, year }: RevenueChartProps) {
         <Card>
             <CardHeader>
                 <CardTitle>Revenue Trend</CardTitle>
-                <CardDescription>Monthly wallet credits for {year}</CardDescription>
+                <CardDescription>{PERIOD_TITLES[period]}</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="h-[300px]">
@@ -31,7 +41,7 @@ export function RevenueChart({ revenueData, year }: RevenueChartProps) {
                                 </linearGradient>
                             </defs>
                             <XAxis
-                                dataKey="month"
+                                dataKey="period"
                                 stroke="var(--muted-foreground)"
                                 fontSize={12}
                                 tickLine={false}
@@ -52,7 +62,7 @@ export function RevenueChart({ revenueData, year }: RevenueChartProps) {
                                                 <div className="grid gap-2">
                                                     <div className="flex flex-col">
                                                         <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                                            {payload[0].payload.month}
+                                                            {payload[0].payload.period}
                                                         </span>
                                                         <span className="font-bold text-lg">
                                                             ₦{payload[0].value?.toLocaleString()}
