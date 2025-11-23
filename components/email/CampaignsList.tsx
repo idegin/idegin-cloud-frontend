@@ -39,7 +39,7 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import {
-    Mail,
+    Megaphone,
     MoreHorizontal,
     RefreshCw,
     Search,
@@ -49,7 +49,7 @@ import {
     Eye,
     Send,
     ArrowLeft,
-    Megaphone,
+    MousePointerClick,
 } from "lucide-react"
 import {
     Tooltip,
@@ -62,18 +62,18 @@ import { CMSBulkActions } from "@/components/shared/cms-bulk-actions"
 import { formatDistanceToNow } from "date-fns"
 import { useDebounce } from "@/lib/hooks/use-debounce"
 
-export interface MailingListItem {
+export interface Campaign {
     id: string
     name: string
-    email: string
-    active: boolean
-    label: string
-    emailViews: number
+    description: string
+    clicks: number
+    status: "draft" | "scheduled" | "sent" | "active"
     createdAt: string
+    updatedAt: string
 }
 
-interface EmailListProps {
-    mailingList: MailingListItem[]
+interface CampaignsListProps {
+    campaigns?: Campaign[]
     isLoading?: boolean
     error?: Error | null
     onRefresh?: () => void
@@ -83,64 +83,56 @@ interface EmailListProps {
     baseUrl?: string
 }
 
-const labelColors: Record<string, string> = {
-    Newsletter: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
-    Updates: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
-    Promotions: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
-    Marketing: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
-    General: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20",
-}
-
-const mockMailingList: MailingListItem[] = [
+const mockCampaigns: Campaign[] = [
     {
         id: "1",
-        name: "John Doe",
-        email: "john.doe@example.com",
-        active: true,
-        label: "Newsletter",
-        emailViews: 47,
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        name: "Welcome Series",
+        description: "Automated welcome email sequence for new subscribers",
+        clicks: 1247,
+        status: "active",
+        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
         id: "2",
-        name: "Jane Smith",
-        email: "jane.smith@example.com",
-        active: true,
-        label: "Updates",
-        emailViews: 132,
-        createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+        name: "Monthly Newsletter",
+        description: "Regular monthly updates and product announcements",
+        clicks: 3892,
+        status: "sent",
+        createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
         id: "3",
-        name: "Bob Johnson",
-        email: "bob.johnson@example.com",
-        active: false,
-        label: "Newsletter",
-        emailViews: 8,
-        createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+        name: "Black Friday Sale",
+        description: "Special promotional campaign for Black Friday deals",
+        clicks: 5621,
+        status: "sent",
+        createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 85 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
         id: "4",
-        name: "Alice Williams",
-        email: "alice.williams@example.com",
-        active: true,
-        label: "Promotions",
-        emailViews: 89,
-        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        name: "Product Launch",
+        description: "New product announcement campaign",
+        clicks: 892,
+        status: "scheduled",
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
         id: "5",
-        name: "Charlie Brown",
-        email: "charlie.brown@example.com",
-        active: true,
-        label: "Updates",
-        emailViews: 203,
-        createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+        name: "Re-engagement Campaign",
+        description: "Win back inactive subscribers",
+        clicks: 0,
+        status: "draft",
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     },
 ]
 
-export default function EmailList({
-    mailingList = mockMailingList,
+export default function CampaignsList({
+    campaigns = mockCampaigns,
     isLoading = false,
     error = null,
     onRefresh,
@@ -148,7 +140,7 @@ export default function EmailList({
     onBack,
     projectId,
     baseUrl,
-}: EmailListProps) {
+}: CampaignsListProps) {
     const router = useRouter()
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedItems, setSelectedItems] = useState<string[]>([])
@@ -157,7 +149,7 @@ export default function EmailList({
 
     const debouncedSearch = useDebounce(searchQuery, 500)
 
-    const emailUrl = baseUrl || `/dashboard/projects/${projectId}`
+    const campaignsUrl = baseUrl || `/dashboard/projects/${projectId}`
 
     React.useEffect(() => {
         if (onSearch) {
@@ -165,16 +157,15 @@ export default function EmailList({
         }
     }, [debouncedSearch, onSearch])
 
-    const filteredList = useMemo(() => {
-        if (!debouncedSearch) return mailingList
+    const filteredCampaigns = useMemo(() => {
+        if (!debouncedSearch) return campaigns
 
-        return mailingList.filter(
+        return campaigns.filter(
             (item) =>
                 item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-                item.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-                item.label.toLowerCase().includes(debouncedSearch.toLowerCase())
+                item.description.toLowerCase().includes(debouncedSearch.toLowerCase())
         )
-    }, [mailingList, debouncedSearch])
+    }, [campaigns, debouncedSearch])
 
     const formatDate = (date: string) => {
         return formatDistanceToNow(new Date(date), { addSuffix: true })
@@ -189,12 +180,12 @@ export default function EmailList({
     const handleSelectAll = useCallback(
         (checked: boolean) => {
             if (checked) {
-                setSelectedItems(filteredList.map((item) => item.id))
+                setSelectedItems(filteredCampaigns.map((item) => item.id))
             } else {
                 setSelectedItems([])
             }
         },
-        [filteredList]
+        [filteredCampaigns]
     )
 
     const handleSelectItem = useCallback((id: string, checked: boolean) => {
@@ -206,32 +197,27 @@ export default function EmailList({
     }, [])
 
     const handleBulkDelete = useCallback(() => {
-        console.log("Delete items:", selectedItems)
-        setSelectedItems([])
-    }, [selectedItems])
-
-    const handleBulkSendEmail = useCallback(() => {
-        console.log("Send email to items:", selectedItems)
+        console.log("Delete campaigns:", selectedItems)
         setSelectedItems([])
     }, [selectedItems])
 
     const handleView = useCallback(
         (id: string) => {
-            console.log("View item:", id)
+            console.log("View campaign:", id)
         },
         []
     )
 
     const handleEdit = useCallback(
         (id: string) => {
-            console.log("Edit item:", id)
+            router.push(`${campaignsUrl}/campaigns/${id}/edit`)
         },
-        []
+        [router, campaignsUrl]
     )
 
-    const handleSendEmail = useCallback(
+    const handleDuplicate = useCallback(
         (id: string) => {
-            console.log("Send email to:", id)
+            console.log("Duplicate campaign:", id)
         },
         []
     )
@@ -243,14 +229,25 @@ export default function EmailList({
 
     const confirmDelete = useCallback(() => {
         if (itemToDelete) {
-            console.log("Delete item:", itemToDelete)
+            console.log("Delete campaign:", itemToDelete)
             setItemToDelete(null)
         }
         setShowDeleteDialog(false)
     }, [itemToDelete])
 
-    if (isLoading) {
-        return <EmailListLoading />
+    const getStatusBadge = (status: Campaign["status"]) => {
+        const statusConfig = {
+            draft: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20",
+            scheduled: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
+            sent: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
+            active: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
+        }
+
+        return (
+            <Badge variant="outline" className={statusConfig[status]}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+            </Badge>
+        )
     }
 
     if (error) {
@@ -258,8 +255,8 @@ export default function EmailList({
             <div className="flex items-center justify-center min-h-[400px]">
                 <SectionPlaceholder
                     variant="error"
-                    title="Failed to load mailing list"
-                    description="We encountered an error while fetching the mailing list. Please try again."
+                    title="Failed to load campaigns"
+                    description="We encountered an error while fetching campaigns. Please try again."
                     action={{
                         label: "Retry",
                         onClick: handleRefresh,
@@ -276,13 +273,6 @@ export default function EmailList({
                 selectedCount={selectedItems.length}
                 onClearSelection={() => setSelectedItems([])}
                 onDelete={handleBulkDelete}
-                actions={[
-                    {
-                        label: "Send Email",
-                        onClick: handleBulkSendEmail,
-                        icon: Send,
-                    },
-                ]}
             />
 
             <div className="flex items-center justify-between">
@@ -295,12 +285,12 @@ export default function EmailList({
                             className="-ml-2 mb-2"
                         >
                             <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back
+                            Back to Email
                         </Button>
                     )}
-                    <h1 className="text-3xl font-bold tracking-tight">Mailing List</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Campaigns</h1>
                     <p className="text-muted-foreground mt-1">
-                        Manage your email subscribers and send newsletters
+                        Manage your email marketing campaigns
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -317,18 +307,9 @@ export default function EmailList({
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
-                    <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="gap-2"
-                        onClick={() => router.push(`${emailUrl}/campaigns`)}
-                    >
-                        <Megaphone className="h-4 w-4" />
-                        Manage Campaigns
-                    </Button>
                     <Button size="sm" className="gap-2">
                         <Plus className="h-4 w-4" />
-                        Add Subscriber
+                        Create Campaign
                     </Button>
                 </div>
             </div>
@@ -336,11 +317,11 @@ export default function EmailList({
             <Card>
                 <CardHeader className="border-b">
                     <div className="flex items-center justify-between">
-                        <CardTitle>Subscribers</CardTitle>
+                        <CardTitle>All Campaigns</CardTitle>
                         <div className="relative w-64">
                             <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
-                                placeholder="Search subscribers..."
+                                placeholder="Search campaigns..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-8"
@@ -349,16 +330,16 @@ export default function EmailList({
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    {filteredList.length === 0 ? (
+                    {filteredCampaigns.length === 0 ? (
                         <div className="py-12">
                             <SectionPlaceholder
                                 variant={searchQuery ? "info" : "default"}
-                                icon={Mail}
-                                title={searchQuery ? "No subscribers found" : "No subscribers yet"}
+                                icon={Megaphone}
+                                title={searchQuery ? "No campaigns found" : "No campaigns yet"}
                                 description={
                                     searchQuery
                                         ? "Try adjusting your search query"
-                                        : "Add your first subscriber to get started"
+                                        : "Create your first campaign to get started"
                                 }
                             />
                         </div>
@@ -370,65 +351,50 @@ export default function EmailList({
                                         <TableHead className="w-[50px]">
                                             <Checkbox
                                                 checked={
-                                                    selectedItems.length === filteredList.length &&
-                                                    filteredList.length > 0
+                                                    selectedItems.length === filteredCampaigns.length &&
+                                                    filteredCampaigns.length > 0
                                                 }
                                                 onCheckedChange={handleSelectAll}
                                                 aria-label="Select all"
                                             />
                                         </TableHead>
                                         <TableHead className="min-w-[200px]">Name</TableHead>
-                                        <TableHead className="min-w-[250px]">Email</TableHead>
-                                        <TableHead className="w-[100px]">Status</TableHead>
-                                        <TableHead className="w-[150px]">Label</TableHead>
-                                        <TableHead className="w-[120px]">Email Views</TableHead>
-                                        <TableHead className="min-w-[150px]">Date Created</TableHead>
+                                        <TableHead className="min-w-[300px]">Description</TableHead>
+                                        <TableHead className="w-[120px]">Clicks</TableHead>
+                                        <TableHead className="w-[120px]">Status</TableHead>
+                                        <TableHead className="min-w-[150px]">Created</TableHead>
+                                        <TableHead className="min-w-[150px]">Last Updated</TableHead>
                                         <TableHead className="w-[80px]">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredList.map((item) => (
-                                        <TableRow key={item.id}>
+                                    {filteredCampaigns.map((campaign) => (
+                                        <TableRow key={campaign.id}>
                                             <TableCell onClick={(e) => e.stopPropagation()}>
                                                 <Checkbox
-                                                    checked={selectedItems.includes(item.id)}
+                                                    checked={selectedItems.includes(campaign.id)}
                                                     onCheckedChange={(checked) =>
-                                                        handleSelectItem(item.id, checked as boolean)
+                                                        handleSelectItem(campaign.id, checked as boolean)
                                                     }
-                                                    aria-label={`Select ${item.name}`}
+                                                    aria-label={`Select ${campaign.name}`}
                                                 />
                                             </TableCell>
-                                            <TableCell className="font-medium">{item.name}</TableCell>
+                                            <TableCell className="font-medium">{campaign.name}</TableCell>
                                             <TableCell className="text-muted-foreground">
-                                                {item.email}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge 
-                                                    className={item.active 
-                                                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20" 
-                                                        : "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20 hover:bg-red-500/20"
-                                                    }
-                                                    variant="outline"
-                                                >
-                                                    {item.active ? "Active" : "Inactive"}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge 
-                                                    variant="outline"
-                                                    className={labelColors[item.label] || labelColors.General}
-                                                >
-                                                    {item.label}
-                                                </Badge>
+                                                {campaign.description}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
-                                                    <Eye className="h-4 w-4 text-muted-foreground" />
-                                                    <span className="font-medium">{item.emailViews}</span>
+                                                    <MousePointerClick className="h-4 w-4 text-muted-foreground" />
+                                                    <span className="font-medium">{campaign.clicks.toLocaleString()}</span>
                                                 </div>
                                             </TableCell>
+                                            <TableCell>{getStatusBadge(campaign.status)}</TableCell>
                                             <TableCell className="text-sm text-muted-foreground">
-                                                {formatDate(item.createdAt)}
+                                                {formatDate(campaign.createdAt)}
+                                            </TableCell>
+                                            <TableCell className="text-sm text-muted-foreground">
+                                                {formatDate(campaign.updatedAt)}
                                             </TableCell>
                                             <TableCell>
                                                 <DropdownMenu>
@@ -445,26 +411,26 @@ export default function EmailList({
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                         <DropdownMenuItem
-                                                            onClick={() => handleView(item.id)}
+                                                            onClick={() => handleView(campaign.id)}
                                                         >
                                                             <Eye className="h-4 w-4 mr-2" />
                                                             View
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
-                                                            onClick={() => handleEdit(item.id)}
+                                                            onClick={() => handleEdit(campaign.id)}
                                                         >
                                                             <Edit className="h-4 w-4 mr-2" />
                                                             Edit
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
-                                                            onClick={() => handleSendEmail(item.id)}
+                                                            onClick={() => handleDuplicate(campaign.id)}
                                                         >
                                                             <Send className="h-4 w-4 mr-2" />
-                                                            Send Mail
+                                                            Duplicate
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem
-                                                            onClick={() => handleDelete(item.id)}
+                                                            onClick={() => handleDelete(campaign.id)}
                                                             className="text-destructive"
                                                         >
                                                             <Trash2 className="h-4 w-4 mr-2" />
@@ -487,8 +453,8 @@ export default function EmailList({
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete this subscriber
-                            from the mailing list.
+                            This action cannot be undone. This will permanently delete this campaign
+                            and all associated data.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -497,95 +463,11 @@ export default function EmailList({
                             onClick={confirmDelete}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                            Delete Subscriber
+                            Delete Campaign
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
-    )
-}
-
-function EmailListLoading() {
-    return (
-        <div className="space-y-6">
-            <div className="h-12" />
-
-            <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                    <div className="h-9 w-[250px] bg-muted animate-pulse rounded" />
-                    <div className="h-4 w-[350px] bg-muted animate-pulse rounded" />
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="h-9 w-[100px] bg-muted animate-pulse rounded" />
-                    <div className="h-9 w-[140px] bg-muted animate-pulse rounded" />
-                </div>
-            </div>
-
-            <Card>
-                <CardHeader className="border-b">
-                    <div className="flex items-center justify-between">
-                        <div className="h-6 w-[120px] bg-muted animate-pulse rounded" />
-                        <div className="h-9 w-[250px] bg-muted animate-pulse rounded" />
-                    </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[50px]">
-                                    <div className="h-4 w-4 bg-muted animate-pulse rounded" />
-                                </TableHead>
-                                <TableHead className="min-w-[200px]">
-                                    <div className="h-4 w-16 bg-muted animate-pulse rounded" />
-                                </TableHead>
-                                <TableHead className="min-w-[250px]">
-                                    <div className="h-4 w-16 bg-muted animate-pulse rounded" />
-                                </TableHead>
-                                <TableHead className="w-[100px]">
-                                    <div className="h-4 w-16 bg-muted animate-pulse rounded" />
-                                </TableHead>
-                                <TableHead className="w-[150px]">
-                                    <div className="h-4 w-16 bg-muted animate-pulse rounded" />
-                                </TableHead>
-                                <TableHead className="min-w-[150px]">
-                                    <div className="h-4 w-20 bg-muted animate-pulse rounded" />
-                                </TableHead>
-                                <TableHead className="w-[80px]">
-                                    <div className="h-4 w-16 bg-muted animate-pulse rounded" />
-                                </TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {[...Array(5)].map((_, i) => (
-                                <TableRow key={i}>
-                                    <TableCell>
-                                        <div className="h-4 w-4 bg-muted animate-pulse rounded" />
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="h-4 w-32 bg-muted animate-pulse rounded" />
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="h-4 w-48 bg-muted animate-pulse rounded" />
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="h-5 w-16 bg-muted animate-pulse rounded-full" />
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="h-5 w-20 bg-muted animate-pulse rounded-full" />
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="h-8 w-8 bg-muted animate-pulse rounded" />
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
         </div>
     )
 }
