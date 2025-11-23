@@ -12,6 +12,11 @@ export default function CampaignBuilder() {
     const { state, setSections, setElements, setBrandGuide, setActiveSectionId, setActiveElementId, updateSectionStyles, updateElementStyles, updateElementContent } = useEmailCampaign();
     const panelOpen = state.activeSection || state.activeElement;
 
+    const handleElementClick = (elementId: string, sectionId: string) => {
+        setActiveSectionId(sectionId)
+        setActiveElementId(elementId)
+    }
+
     useEffect(() => {
         if (state.sections.length === 0) {
             setSections(mockEmailSections)
@@ -44,7 +49,7 @@ export default function CampaignBuilder() {
                                             setActiveSectionId(section.id)
                                         }}
                                         onElementClick={(elementId) => {
-                                            setActiveElementId(elementId)
+                                            handleElementClick(elementId, section.id)
                                         }}
                                     />
                                 ))}
@@ -54,7 +59,7 @@ export default function CampaignBuilder() {
                 </Card>
             </div>
 
-            <div className={cn("duration-300 ease-in-out",{
+            <div className={cn("duration-300 ease-in-out sticky top-[1rem]",{
                 "w-[30rem] grid grid-cols-1": panelOpen,
                 "w-[0rem]": !panelOpen,
             })}>
