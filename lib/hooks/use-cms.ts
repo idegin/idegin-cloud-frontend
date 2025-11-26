@@ -69,18 +69,21 @@ export function useDeleteCollection(projectId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (collectionId: string) => cmsApi.collections.delete(projectId, collectionId),
-    onSuccess: () => {
+    mutationFn: (collectionIds: string | string[]) => cmsApi.collections.delete(projectId, collectionIds),
+    onSuccess: (_, collectionIds) => {
       queryClient.invalidateQueries({ queryKey: ["cms-collections", projectId] })
+      const count = Array.isArray(collectionIds) ? collectionIds.length : 1
       toast({
         title: "Success",
-        description: "Collection deleted successfully",
+        description: count === 1 
+          ? "Collection deleted successfully" 
+          : `${count} collections deleted successfully`,
       })
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to delete collection",
+        description: error.response?.data?.message || "Failed to delete collection(s)",
         variant: "destructive",
       })
     },

@@ -39,12 +39,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { FileText, MoreHorizontal, RefreshCw, Search, AlertCircle, Plus, Edit, Trash2, Settings, ArrowLeft, BookOpen } from "lucide-react"
+import { FileText, MoreHorizontal, RefreshCw, Search, AlertCircle, Plus, Edit, Trash2, Settings, ArrowLeft, BookOpen, Loader2 } from "lucide-react"
 import { SectionPlaceholder } from "@/components/shared/section-placeholder"
 import { CMSBulkActions } from "@/components/shared/cms-bulk-actions"
 import { formatDistanceToNow } from "date-fns"
 import { useDebounce } from "@/lib/hooks/use-debounce"
 import { useApp } from "@/lib/contexts/app-context"
+import { useDeleteCollection } from "@/lib/hooks/use-cms"
 import type { CMSCollection, CMSEntry, EntriesResponse } from "@/lib/api/cms"
 
 interface CMSCollectionEntriesProps {
@@ -140,6 +141,7 @@ export default function CMSCollectionEntires({
     const { appData } = useApp()
     
     const debouncedSearch = useDebounce(searchQuery, 500)
+    const deleteCollectionMutation = useDeleteCollection(projectId)
 
     const entriesUrl = baseUrl || `/dashboard/projects/${projectId}`
     const userRole = appData?.user?.role || "client"
@@ -188,11 +190,15 @@ export default function CMSCollectionEntires({
         setSelectedItems([])
     }, [selectedItems])
 
-    const handleDeleteCollection = useCallback(() => {
-        // TODO: Implement delete collection API call
-        console.log("Delete collection:", collectionId)
-        setShowDeleteDialog(false)
-    }, [collectionId])
+    const handleDeleteCollection = useCallback(async () => {
+        try {
+            await deleteCollectionMutation.mutateAsync(collectionId)
+            setShowDeleteDialog(false)
+            if (onBack) onBack()
+        } catch (error) {
+            // Error is handled in the mutation
+        }
+    }, [collectionId, deleteCollectionMutation, onBack])
 
     return (
         <div className="space-y-6">
@@ -418,12 +424,22 @@ export default function CMSCollectionEntires({
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel disabled={deleteCollectionMutation.isPending}>
+                            Cancel
+                        </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDeleteCollection}
+                            disabled={deleteCollectionMutation.isPending}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                            Delete Collection
+                            {deleteCollectionMutation.isPending ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                "Delete Collection"
+                            )}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

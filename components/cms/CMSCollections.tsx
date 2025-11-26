@@ -25,12 +25,22 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Database, MoreHorizontal, RefreshCw, Search, AlertCircle, Plus } from "lucide-react"
+import { Database, MoreHorizontal, RefreshCw, Search, AlertCircle, Plus, Loader2 } from "lucide-react"
 import { CMSCollectionsLoading } from "./collections-loading"
 import { SectionPlaceholder } from "@/components/shared/section-placeholder"
 import { UserAvatar } from "@/components/shared/user-avatar"
@@ -40,6 +50,7 @@ import { formatDistanceToNow } from "date-fns"
 import type { CMSCollection } from "@/lib/api/cms"
 import type { Project } from "@/lib/api/projects"
 import { useDebouncedSearch } from "@/lib/hooks/use-debounced-search"
+import { useDeleteCollection } from "@/lib/hooks/use-cms"
 
 interface CMSCollectionsProps {
     collections: CMSCollection[]
@@ -65,6 +76,11 @@ export default function CMSCollections({
     const router = useRouter()
     const [selectedItems, setSelectedItems] = useState<string[]>([])
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+    const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false)
+    const [collectionToDelete, setCollectionToDelete] = useState<CMSCollection | null>(null)
+    
+    const deleteCollectionMutation = useDeleteCollection(projectId)
 
     const { searchQuery, debouncedSearchQuery, handleSearchChange } = useDebouncedSearch(
         "",
@@ -115,8 +131,35 @@ export default function CMSCollections({
     }
 
     const handleBulkDelete = () => {
-        console.log("Delete items:", selectedItems)
-        setSelectedItems([])
+        setShowBulkDeleteDialog(true)
+    }
+
+    const handleConfirmBulkDelete = async () => {
+        try {
+            await deleteCollectionMutation.mutateAsync(selectedItems)
+            setSelectedItems([])
+            setShowBulkDeleteDialog(false)
+            if (onRefresh) onRefresh()
+        } catch (error) {
+            // Error is handled in the mutation
+        }
+    }
+
+    const handleSingleDelete = (collection: CMSCollection) => {
+        setCollectionToDelete(collection)
+        setShowDeleteDialog(true)
+    }
+
+    const handleConfirmSingleDelete = async () => {
+        if (!collectionToDelete) return
+        try {
+            await deleteCollectionMutation.mutateAsync(collectionToDelete.id)
+            setShowDeleteDialog(false)
+            setCollectionToDelete(null)
+            if (onRefresh) onRefresh()
+        } catch (error) {
+            // Error is handled in the mutation
+        }
     }
 
     const handleBulkDuplicate = () => {
@@ -322,6 +365,7 @@ export default function CMSCollections({
                                                         <DropdownMenuItem
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
+                                                                handleSingleDelete(collection)
                                                             }}
                                                             className="text-destructive"
                                                         >
@@ -338,6 +382,72 @@ export default function CMSCollections({
                     )}
                 </CardContent>
             </Card>
+
+            {/* Single Delete Confirmation Dialog */}
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the collection
+                            <span className="font-semibold"> "{collectionToDelete?.name}" </span>
+                            and remove all associated entries, fields, and data from the database.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleteCollectionMutation.isPending}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleConfirmSingleDelete}
+                            disabled={deleteCollectionMutation.isPending}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {deleteCollectionMutation.isPending ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                "Delete Collection"
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Bulk Delete Confirmation Dialog */}
+            <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete {selectedItems.length} collection{selectedItems.length > 1 ? 's' : ''}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete 
+                            <span className="font-semibold"> {selectedItems.length} collection{selectedItems.length > 1 ? 's' : ''} </span>
+                            and remove all associated entries, fields, and data from the database.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleteCollectionMutation.isPending}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleConfirmBulkDelete}
+                            disabled={deleteCollectionMutation.isPending}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {deleteCollectionMutation.isPending ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                `Delete ${selectedItems.length} Collection${selectedItems.length > 1 ? 's' : ''}`
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
