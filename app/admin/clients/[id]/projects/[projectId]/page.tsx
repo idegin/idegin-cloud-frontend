@@ -365,7 +365,13 @@ export default function ProjectDetailsPage() {
                 </p>
             </div>
 
-            <AdminProjectIntegration />
+            <AdminProjectIntegration 
+                integrationSettings={{
+                    enableCms: project.enableCms ?? true,
+                    enableEmailMarketing: project.enableEmailMarketing ?? true,
+                    enableCrm: project.enableCrm ?? true,
+                }}
+            />
 
             <div className="grid gap-6 lg:grid-cols-2">
                 {/* Storage Usage Card */}

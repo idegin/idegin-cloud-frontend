@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Switch } from "@/components/ui/switch"
+import { PROJECT_INTEGRATIONS } from "@/lib/project-integrations"
 
 interface ProjectInfoStepProps {
     data: {
@@ -11,6 +13,9 @@ interface ProjectInfoStepProps {
         description: string
         budget: string
         maxStorageGB: string
+        enableCms: boolean
+        enableEmailMarketing: boolean
+        enableCrm: boolean
     }
     onChange: (data: any) => void
     isLoading?: boolean
@@ -111,6 +116,43 @@ export function ProjectInfoStep({ data, onChange, isLoading }: ProjectInfoStepPr
                 <p className="text-xs text-muted-foreground">
                     Maximum storage allocation in GB (default: 1 GB)
                 </p>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t">
+                <div>
+                    <Label className="text-sm font-medium">Project Integrations</Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Enable or disable features for this project
+                    </p>
+                </div>
+                <div className="grid gap-4">
+                    {PROJECT_INTEGRATIONS.map((integration) => {
+                        const Icon = integration.icon
+                        const isEnabled = data[integration.key]
+                        return (
+                            <div
+                                key={integration.id}
+                                className={`flex items-center justify-between p-4 rounded-lg border ${
+                                    isEnabled ? integration.color : "bg-muted/30 border-muted"
+                                }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-md ${isEnabled ? integration.color : "bg-muted"}`}>
+                                        <Icon className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-medium">{integration.title}</h4>
+                                        <p className="text-xs text-muted-foreground">{integration.description}</p>
+                                    </div>
+                                </div>
+                                <Switch
+                                    checked={isEnabled}
+                                    onCheckedChange={(checked) => onChange({ [integration.key]: checked })}
+                                />
+                            </div>
+                        )
+                    })}
+                </div>
             </div>
         </div>
     )

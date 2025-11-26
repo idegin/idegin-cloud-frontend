@@ -397,7 +397,13 @@ export default function ProjectDetailsPage({
 
 
            {process.env.NODE_ENV !== "production" && (<div>
-                <ProjectActionBtn />
+                <ProjectActionBtn 
+                    integrationSettings={{
+                        enableCms: project.enableCms ?? true,
+                        enableEmailMarketing: project.enableEmailMarketing ?? true,
+                        enableCrm: project.enableCrm ?? true,
+                    }}
+                />
             </div>)}
 
             <Card className='border-none p-0 px-0'>

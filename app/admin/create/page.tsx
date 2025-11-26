@@ -54,6 +54,9 @@ export default function CreateProjectPage() {
             projectId: string;
             description: string;
         }>,
+        enableCms: true,
+        enableEmailMarketing: true,
+        enableCrm: true,
     });
 
     console.log(formData);
@@ -108,6 +111,9 @@ export default function CreateProjectPage() {
                 providers: providers,
                 status: "in_dev",
                 is_payment_active: false,
+                enableCms: formData.enableCms,
+                enableEmailMarketing: formData.enableEmailMarketing,
+                enableCrm: formData.enableCrm,
             });
 
             toast({
@@ -141,6 +147,9 @@ export default function CreateProjectPage() {
             maxStorageGB: "1",
             clientId: "",
             providerProjects: [],
+            enableCms: true,
+            enableEmailMarketing: true,
+            enableCrm: true,
         });
     };
 
