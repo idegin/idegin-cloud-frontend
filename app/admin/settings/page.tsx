@@ -15,7 +15,7 @@ export default function AdminSettingsPage() {
     const handleBackupDatabase = async () => {
         setIsBackingUp(true)
         try {
-            const response = await apiClient.get("/backup/database")
+            const response = await apiClient.get("/backups/database")
             
             toast({
                 title: "Backup Successful",
