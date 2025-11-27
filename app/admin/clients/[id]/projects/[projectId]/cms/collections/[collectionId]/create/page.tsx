@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation"
 import { useCMSCollection } from "@/lib/contexts/cms-collection-context"
+import { useProject } from "@/lib/contexts/project-context"
 import { CollectionEntryForm } from "@/components/cms/collection-entry-form"
 import { EntryFormLoading } from "@/components/cms/entry-form-loading"
 import { cmsApi, type CMSEntry } from "@/lib/api/cms"
@@ -16,6 +17,7 @@ export default function CreateEntryPage() {
     const router = useRouter()
     const queryClient = useQueryClient()
     const { cmsCollectionData, isLoading, error } = useCMSCollection()
+    const { project, isLoading: isProjectLoading } = useProject()
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [createdEntry, setCreatedEntry] = useState<CMSEntry | null>(null)
 
@@ -172,7 +174,7 @@ export default function CreateEntryPage() {
         router.push(`/admin/clients/${clientId}/projects/${projectId}/cms/collections/${collectionId}`)
     }
 
-    if (isLoading) {
+    if (isLoading || isProjectLoading) {
         return <EntryFormLoading />
     }
 
@@ -191,6 +193,15 @@ export default function CreateEntryPage() {
 
     const transformedData = createdEntry ? transformEntryDataForForm(createdEntry.dataDraft || createdEntry.data, cmsCollectionData.fields) : {}
 
+    const breadcrumbs = project ? [
+        { label: "Clients", href: "/admin/clients" },
+        { label: project.organization.organizationName, href: `/admin/clients/${clientId}` },
+        { label: project.project.projectName, href: `/admin/clients/${clientId}/projects/${projectId}` },
+        { label: "CMS", href: `/admin/clients/${clientId}/projects/${projectId}/cms` },
+        { label: cmsCollectionData.collection.name, href: `/admin/clients/${clientId}/projects/${projectId}/cms/collections/${collectionId}` },
+        { label: "Create Entry" },
+    ] : []
+
     return (
         <CollectionEntryForm
             collection={cmsCollectionData.collection}
@@ -203,6 +214,7 @@ export default function CreateEntryPage() {
             entry={createdEntry}
             isSubmitting={isSubmitting}
             projectId={projectId}
+            breadcrumbs={breadcrumbs}
         />
     )
 }

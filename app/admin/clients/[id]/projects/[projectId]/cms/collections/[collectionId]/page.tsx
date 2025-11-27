@@ -4,6 +4,7 @@ import React, { useState, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import CMSCollectionEntires, { CMSCollectionEntriesLoading } from "@/components/cms/CMSCollectionEntires"
 import { useCMSCollection as useCMSCollectionContext } from "@/lib/contexts/cms-collection-context"
+import { useProject } from "@/lib/contexts/project-context"
 import { useCMSEntries } from "@/lib/hooks/cms"
 import { SectionPlaceholder } from "@/components/shared/section-placeholder"
 import { Database } from "lucide-react"
@@ -19,10 +20,9 @@ export default function Page() {
     const [currentPage, setCurrentPage] = useState(1)
     const limit = 10
 
-    // Get collection and fields from context
+    const { project, isLoading: isProjectLoading } = useProject()
     const { cmsCollectionData, isLoading: isCollectionLoading, error: collectionError } = useCMSCollectionContext()
     
-    // Get entries with filters
     const { data: entries, isPending: isEntriesLoading, error: entriesError, refetch } = useCMSEntries(
         projectId, 
         collectionId, 
@@ -46,8 +46,7 @@ export default function Page() {
         router.push(`/admin/clients/${clientId}/projects/${projectId}/cms`)
     }, [router, clientId, projectId])
 
-    // Only show full loading on initial collection load
-    if (isCollectionLoading) {
+    if (isCollectionLoading || isProjectLoading) {
         return (
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -79,6 +78,14 @@ export default function Page() {
         )
     }
 
+    const breadcrumbs = project ? [
+        { label: "Clients", href: "/admin/clients" },
+        { label: project.organization.organizationName, href: `/admin/clients/${clientId}` },
+        { label: project.project.projectName, href: `/admin/clients/${clientId}/projects/${projectId}` },
+        { label: "CMS", href: `/admin/clients/${clientId}/projects/${projectId}/cms` },
+        { label: cmsCollectionData.collection.name },
+    ] : []
+
     return (
         <CMSCollectionEntires
             collection={cmsCollectionData.collection}
@@ -91,6 +98,7 @@ export default function Page() {
             projectId={projectId}
             collectionId={collectionId}
             baseUrl={`/admin/clients/${clientId}/projects/${projectId}`}
+            breadcrumbs={breadcrumbs}
         />
     )
 }

@@ -45,6 +45,7 @@ import { CMSCollectionsLoading } from "./collections-loading"
 import { SectionPlaceholder } from "@/components/shared/section-placeholder"
 import { UserAvatar } from "@/components/shared/user-avatar"
 import { CMSBulkActions } from "@/components/shared/cms-bulk-actions"
+import { CMSBreadcrumbs, type CMSBreadcrumbItemType } from "./shared/CMSBreadcrumbs"
 import { CreateCollectionDialog } from "./create-collection-dialog"
 import { formatDistanceToNow } from "date-fns"
 import type { CMSCollection } from "@/lib/api/cms"
@@ -61,6 +62,7 @@ interface CMSCollectionsProps {
     onSearch?: (searchQuery: string) => void
     clientId: string
     projectId: string
+    breadcrumbs?: CMSBreadcrumbItemType[]
 }
 
 export default function CMSCollections({ 
@@ -71,7 +73,8 @@ export default function CMSCollections({
     onRefresh,
     onSearch,
     clientId,
-    projectId 
+    projectId,
+    breadcrumbs
 }: CMSCollectionsProps) {
     const router = useRouter()
     const [selectedItems, setSelectedItems] = useState<string[]>([])
@@ -193,6 +196,8 @@ export default function CMSCollections({
 
     return (
         <div className="space-y-6">
+            <CMSBreadcrumbs items={breadcrumbs} />
+
             <CMSBulkActions
                 selectedCount={selectedItems.length}
                 onClearSelection={() => setSelectedItems([])}

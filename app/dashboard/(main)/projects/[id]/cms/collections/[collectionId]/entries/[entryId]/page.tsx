@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation"
 import { useCMSCollection } from "@/lib/contexts/cms-collection-context"
+import { useProject } from "@/lib/contexts/project-context"
 import { useCMSEntry } from "@/lib/hooks/cms"
 import { CollectionEntryForm } from "@/components/cms/collection-entry-form"
 import { EntryFormLoading } from "@/components/cms/entry-form-loading"
@@ -17,6 +18,7 @@ export default function EntryDetailsPage() {
     const router = useRouter()
     const queryClient = useQueryClient()
     const { cmsCollectionData, isLoading: isCollectionLoading, error: collectionError } = useCMSCollection()
+    const { project, isLoading: isProjectLoading } = useProject()
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [currentEntry, setCurrentEntry] = useState<CMSEntry | null>(null)
     const [transformedData, setTransformedData] = useState<Record<string, any> | null>(null)
@@ -261,7 +263,7 @@ export default function EntryDetailsPage() {
         router.push(`/dashboard/projects/${projectId}/cms/collections/${collectionId}`)
     }
 
-    if (isCollectionLoading || isEntryLoading) {
+    if (isCollectionLoading || isEntryLoading || isProjectLoading) {
         return <EntryFormLoading />
     }
 
@@ -300,6 +302,14 @@ export default function EntryDetailsPage() {
         return <EntryFormLoading />
     }
 
+    const breadcrumbs = project ? [
+        { label: "Projects", href: "/dashboard/projects" },
+        { label: project.project.projectName, href: `/dashboard/projects/${projectId}` },
+        { label: "CMS", href: `/dashboard/projects/${projectId}/cms` },
+        { label: cmsCollectionData.collection.name, href: `/dashboard/projects/${projectId}/cms/collections/${collectionId}` },
+        { label: currentEntry?.data?.name || currentEntry?.data?.title || "Edit Entry" },
+    ] : []
+
     return (
         <CollectionEntryForm
             collection={cmsCollectionData.collection}
@@ -312,6 +322,7 @@ export default function EntryDetailsPage() {
             entry={currentEntry}
             isSubmitting={isSubmitting}
             projectId={projectId}
+            breadcrumbs={breadcrumbs}
         />
     )
 }

@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator"
 import { AlertCircle, ArrowLeft, Save, Upload, Eye, EyeOff } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { CMSBreadcrumbs, type CMSBreadcrumbItemType } from "@/components/cms/shared/CMSBreadcrumbs"
 import type { CMSCollection, CMSCollectionField, CMSEntry } from "@/lib/api/cms"
 import { isEqual } from "lodash"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -22,6 +23,7 @@ interface CollectionEntryFormProps {
     entry?: CMSEntry | null
     isSubmitting?: boolean
     projectId?: string
+    breadcrumbs?: CMSBreadcrumbItemType[]
 }
 
 export function CollectionEntryForm({
@@ -35,6 +37,7 @@ export function CollectionEntryForm({
     entry = null,
     isSubmitting = false,
     projectId,
+    breadcrumbs,
 }: CollectionEntryFormProps) {
     const [formData, setFormData] = useState<Record<string, any>>(initialData)
     const [errors, setErrors] = useState<Record<string, string>>({})
@@ -225,6 +228,8 @@ export function CollectionEntryForm({
 
     return (
         <div className="space-y-6">
+            <CMSBreadcrumbs items={breadcrumbs} />
+
             {/* Header */}
             <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">

@@ -25,12 +25,10 @@ export default function Page() {
         setSearchQuery(query)
     }, [])
 
-    // Show loading while either project or collections are loading
     if (isProjectLoading || isCollectionsLoading) {
         return <CMSCollectionsLoading />
     }
 
-    // Show error if project failed to load
     if (projectError || !project) {
         return (
             <div className="py-12">
@@ -44,6 +42,13 @@ export default function Page() {
         )
     }
 
+    const breadcrumbs = [
+        { label: "Clients", href: "/admin/clients" },
+        { label: project.organization.organizationName, href: `/admin/clients/${clientId}` },
+        { label: project.project.projectName, href: `/admin/clients/${clientId}/projects/${projectId}` },
+        { label: "CMS" },
+    ]
+
     return (
         <CMSCollections
             collections={collections || []}
@@ -54,6 +59,7 @@ export default function Page() {
             onSearch={handleSearch}
             clientId={clientId}
             projectId={projectId}
+            breadcrumbs={breadcrumbs}
         />
     )
 }

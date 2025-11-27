@@ -8,7 +8,6 @@ import { useCMSEntries } from "@/lib/hooks/cms"
 import { useProject } from "@/lib/contexts/project-context"
 import { SectionPlaceholder } from "@/components/shared/section-placeholder"
 import { Database } from "lucide-react"
-import { CMSBreadcrumbs } from "@/components/cms/shared/CMSBreadcrumbs"
 
 export default function CollectionEntriesPage() {
     const params = useParams()
@@ -96,7 +95,6 @@ export default function CollectionEntriesPage() {
 
     return (
         <div className="space-y-6">
-            <CMSBreadcrumbs items={breadcrumbs} />
             <CMSCollectionEntires
                 collection={cmsCollectionData.collection}
                 entries={entries || null}
@@ -108,6 +106,7 @@ export default function CollectionEntriesPage() {
                 projectId={projectId}
                 collectionId={collectionId}
                 baseUrl={`/dashboard/projects/${projectId}`}
+                breadcrumbs={breadcrumbs}
             />
         </div>
     )

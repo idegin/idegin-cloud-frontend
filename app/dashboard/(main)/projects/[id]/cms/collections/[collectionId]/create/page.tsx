@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation"
 import { useCMSCollection } from "@/lib/contexts/cms-collection-context"
+import { useProject } from "@/lib/contexts/project-context"
 import { CollectionEntryForm } from "@/components/cms/collection-entry-form"
 import { EntryFormLoading } from "@/components/cms/entry-form-loading"
 import { cmsApi, type CMSEntry } from "@/lib/api/cms"
@@ -16,6 +17,7 @@ export default function CreateEntryPage() {
     const router = useRouter()
     const queryClient = useQueryClient()
     const { cmsCollectionData, isLoading: isCollectionLoading, error: collectionError } = useCMSCollection()
+    const { project, isLoading: isProjectLoading } = useProject()
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const projectId = params.id as string
@@ -141,7 +143,7 @@ export default function CreateEntryPage() {
         router.push(`/dashboard/projects/${projectId}/cms/collections/${collectionId}`)
     }
 
-    if (isCollectionLoading) {
+    if (isCollectionLoading || isProjectLoading) {
         return <EntryFormLoading />
     }
 
@@ -158,6 +160,14 @@ export default function CreateEntryPage() {
         )
     }
 
+    const breadcrumbs = project ? [
+        { label: "Projects", href: "/dashboard/projects" },
+        { label: project.project.projectName, href: `/dashboard/projects/${projectId}` },
+        { label: "CMS", href: `/dashboard/projects/${projectId}/cms` },
+        { label: cmsCollectionData.collection.name, href: `/dashboard/projects/${projectId}/cms/collections/${collectionId}` },
+        { label: "Create Entry" },
+    ] : []
+
     return (
         <CollectionEntryForm
             collection={cmsCollectionData.collection}
@@ -166,6 +176,7 @@ export default function CreateEntryPage() {
             onBack={handleBack}
             isSubmitting={isSubmitting}
             projectId={projectId}
+            breadcrumbs={breadcrumbs}
         />
     )
 }

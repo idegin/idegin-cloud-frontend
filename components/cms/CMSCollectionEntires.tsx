@@ -42,6 +42,7 @@ import { Badge } from "@/components/ui/badge"
 import { FileText, MoreHorizontal, RefreshCw, Search, AlertCircle, Plus, Edit, Trash2, Settings, ArrowLeft, BookOpen, Loader2 } from "lucide-react"
 import { SectionPlaceholder } from "@/components/shared/section-placeholder"
 import { CMSBulkActions } from "@/components/shared/cms-bulk-actions"
+import { CMSBreadcrumbs, type CMSBreadcrumbItemType } from "./shared/CMSBreadcrumbs"
 import { formatDistanceToNow } from "date-fns"
 import { useDebounce } from "@/lib/hooks/use-debounce"
 import { useApp } from "@/lib/contexts/app-context"
@@ -59,6 +60,7 @@ interface CMSCollectionEntriesProps {
     projectId: string
     collectionId: string
     baseUrl?: string
+    breadcrumbs?: CMSBreadcrumbItemType[]
 }
 
 export function CMSCollectionEntriesLoading() {
@@ -133,6 +135,7 @@ export default function CMSCollectionEntires({
     projectId,
     collectionId,
     baseUrl,
+    breadcrumbs,
 }: CMSCollectionEntriesProps) {
     const router = useRouter()
     const [searchQuery, setSearchQuery] = useState("")
@@ -202,6 +205,8 @@ export default function CMSCollectionEntires({
 
     return (
         <div className="space-y-6">
+            <CMSBreadcrumbs items={breadcrumbs} />
+
             <CMSBulkActions
                 selectedCount={selectedItems.length}
                 onClearSelection={() => setSelectedItems([])}
@@ -210,22 +215,23 @@ export default function CMSCollectionEntires({
             />
 
             <div className="flex items-center justify-between">
-                <div className="space-y-1">
+                <div className="flex items-center gap-3">
                     {onBack && (
                         <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
                             onClick={onBack}
-                            className="-ml-2 mb-2"
+                            className="h-9 w-9"
                         >
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back to Collections
+                            <ArrowLeft className="h-4 w-4" />
                         </Button>
                     )}
-                    <h1 className="text-3xl font-bold tracking-tight">{collection.name}</h1>
-                    <p className="text-muted-foreground mt-1">
-                        {collection.description || "Manage collection entries"}
-                    </p>
+                    <div className="space-y-1">
+                        <h1 className="text-3xl font-bold tracking-tight">{collection.name}</h1>
+                        <p className="text-muted-foreground">
+                            {collection.description || "Manage collection entries"}
+                        </p>
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <DropdownMenu>
