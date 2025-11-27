@@ -39,10 +39,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { FileText, MoreHorizontal, RefreshCw, Search, AlertCircle, Plus, Edit, Trash2, Settings, ArrowLeft, BookOpen, Loader2 } from "lucide-react"
+import { FileText, MoreHorizontal, RefreshCw, Search, AlertCircle, Plus, Edit, Trash2, Settings, ArrowLeft, BookOpen, Loader2, FileCode2 } from "lucide-react"
 import { SectionPlaceholder } from "@/components/shared/section-placeholder"
 import { CMSBulkActions } from "@/components/shared/cms-bulk-actions"
 import { CMSBreadcrumbs, type CMSBreadcrumbItemType } from "./shared/CMSBreadcrumbs"
+import { CMSTypesSheet } from "./CMSTypesSheet"
 import { formatDistanceToNow } from "date-fns"
 import { useDebounce } from "@/lib/hooks/use-debounce"
 import { useApp } from "@/lib/contexts/app-context"
@@ -141,6 +142,7 @@ export default function CMSCollectionEntires({
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedItems, setSelectedItems] = useState<string[]>([])
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+    const [showTypesSheet, setShowTypesSheet] = useState(false)
     const { appData } = useApp()
     
     const debouncedSearch = useDebounce(searchQuery, 500)
@@ -248,6 +250,10 @@ export default function CMSCollectionEntires({
                                 <RefreshCw className="h-4 w-4 mr-2" />
                                 Refresh
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setShowTypesSheet(true)}>
+                                <FileCode2 className="h-4 w-4 mr-2" />
+                                View Documentation
+                            </DropdownMenuItem>
                             {userRole === "super_admin" && (
                                 <>
                                     <DropdownMenuItem 
@@ -255,12 +261,6 @@ export default function CMSCollectionEntires({
                                     >
                                         <Settings className="h-4 w-4 mr-2" />
                                         Edit Fields
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                        onClick={() => router.push(`${entriesUrl}/cms/collections/${collectionId}/docs`)}
-                                    >
-                                        <BookOpen className="h-4 w-4 mr-2" />
-                                        API Documentation
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem 
@@ -450,6 +450,14 @@ export default function CMSCollectionEntires({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <CMSTypesSheet
+                open={showTypesSheet}
+                onOpenChange={setShowTypesSheet}
+                projectId={projectId}
+                collectionSlug={collection.slug}
+                collectionName={collection.name}
+            />
         </div>
     )
 }

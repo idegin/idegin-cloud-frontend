@@ -166,6 +166,27 @@ export const cmsApi = {
     },
   },
 
+  // Docs endpoints - Generate Documentation for CMS collections
+  docs: {
+    getTypes: async (projectId: string) => {
+      const response = await apiClient.get<ApiResponse<{
+        types: string
+        format: string
+        generatedAt: string
+      }>>(`/cms/docs/${projectId}/types`)
+      return response.data.data
+    },
+
+    getCollectionTypes: async (projectId: string, collectionSlug: string) => {
+      const response = await apiClient.get<ApiResponse<{
+        types: string
+        format: string
+        generatedAt: string
+      }>>(`/cms/docs/${projectId}/collections/${collectionSlug}/types`)
+      return response.data.data
+    },
+  },
+
   // Schema endpoints
   schema: {
     get: async (projectId: string, collectionId: string) => {

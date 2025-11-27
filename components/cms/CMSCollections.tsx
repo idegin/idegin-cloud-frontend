@@ -40,13 +40,24 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Database, MoreHorizontal, RefreshCw, Search, AlertCircle, Plus, Loader2 } from "lucide-react"
+import { 
+    Database, 
+    MoreHorizontal, 
+    RefreshCw, 
+    Search, 
+    AlertCircle, 
+    Plus, 
+    Loader2,
+    FileCode2,
+    ChevronDown
+} from "lucide-react"
 import { CMSCollectionsLoading } from "./collections-loading"
 import { SectionPlaceholder } from "@/components/shared/section-placeholder"
 import { UserAvatar } from "@/components/shared/user-avatar"
 import { CMSBulkActions } from "@/components/shared/cms-bulk-actions"
 import { CMSBreadcrumbs, type CMSBreadcrumbItemType } from "./shared/CMSBreadcrumbs"
 import { CreateCollectionDialog } from "./create-collection-dialog"
+import { CMSTypesSheet } from "./CMSTypesSheet"
 import { formatDistanceToNow } from "date-fns"
 import type { CMSCollection } from "@/lib/api/cms"
 import type { Project } from "@/lib/api/projects"
@@ -82,6 +93,7 @@ export default function CMSCollections({
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false)
     const [collectionToDelete, setCollectionToDelete] = useState<CMSCollection | null>(null)
+    const [isTypesSheetOpen, setIsTypesSheetOpen] = useState(false)
     
     const deleteCollectionMutation = useDeleteCollection(projectId)
 
@@ -214,22 +226,34 @@ export default function CMSCollections({
                 </div>
                 <div className="flex gap-2">
                     <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleRefresh}
-                        className="gap-2"
-                    >
-                        <RefreshCw className="h-4 w-4" />
-                        Refresh
-                    </Button>
-                    <Button
-                        size="sm"
                         onClick={() => setIsCreateDialogOpen(true)}
                         className="gap-2"
                     >
                         <Plus className="h-4 w-4" />
                         Add Collection
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon" className="gap-2">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleRefresh} className="gap-2">
+                                <RefreshCw className="h-4 w-4" />
+                                Refresh
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                                onClick={() => setIsTypesSheetOpen(true)} 
+                                className="gap-2"
+                            >
+                                <FileCode2 className="h-4 w-4" />
+                                View Documentation
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
 
@@ -237,6 +261,13 @@ export default function CMSCollections({
                 projectId={projectId}
                 open={isCreateDialogOpen}
                 onOpenChange={setIsCreateDialogOpen}
+            />
+
+            <CMSTypesSheet
+                open={isTypesSheetOpen}
+                onOpenChange={setIsTypesSheetOpen}
+                projectId={projectId}
+                projectName={project.projectName}
             />
 
             <Card>
