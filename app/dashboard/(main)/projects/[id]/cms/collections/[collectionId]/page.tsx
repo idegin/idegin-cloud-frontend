@@ -7,6 +7,7 @@ import { useCMSCollection as useCMSCollectionContext } from "@/lib/contexts/cms-
 import { useCMSEntries } from "@/lib/hooks/cms"
 import { useProject } from "@/lib/contexts/project-context"
 import { SectionPlaceholder } from "@/components/shared/section-placeholder"
+import { CMSBreadcrumbs } from "@/components/cms/shared/CMSBreadcrumbs"
 import { Database } from "lucide-react"
 
 export default function CollectionEntriesPage() {

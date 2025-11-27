@@ -80,7 +80,6 @@ export default function Page() {
 
     const breadcrumbs = project ? [
         { label: "Clients", href: "/admin/clients" },
-        { label: project.organization.organizationName, href: `/admin/clients/${clientId}` },
         { label: project.project.projectName, href: `/admin/clients/${clientId}/projects/${projectId}` },
         { label: "CMS", href: `/admin/clients/${clientId}/projects/${projectId}/cms` },
         { label: cmsCollectionData.collection.name },
