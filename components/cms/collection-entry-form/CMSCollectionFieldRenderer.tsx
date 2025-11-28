@@ -106,20 +106,43 @@ const CMSCollectionFieldRendererComponent = ({
 
     const renderField = () => {
         const fieldType = fieldConfig?.type?.toLowerCase() || "short_text"
+        const maxLength = validationRules?.maxLength
+        const minLength = validationRules?.minLength
+        const currentLength = typeof value === 'string' ? value.length : 0
+
+        const renderCharacterCount = () => {
+            if (!maxLength && !minLength) return null
+            const isOverMax = maxLength && currentLength > maxLength
+            const isUnderMin = minLength && currentLength < minLength
+            
+            return (
+                <div className={cn(
+                    "text-xs mt-1",
+                    isOverMax ? "text-destructive" : isUnderMin ? "text-amber-500" : "text-muted-foreground"
+                )}>
+                    {currentLength}{maxLength ? `/${maxLength}` : ''} characters
+                    {minLength && currentLength < minLength && ` (min: ${minLength})`}
+                </div>
+            )
+        }
 
         switch (fieldType) {
             case "short_text":
             case "url":
             case "email":
                 return (
-                    <Input
-                        id={fieldConfig.key}
-                        type={fieldType === "email" ? "email" : fieldType === "url" ? "url" : "text"}
-                        placeholder={fieldConfig.placeholder || `Enter ${fieldConfig.label}`}
-                        value={value || ""}
-                        onChange={(e) => onChange(e.target.value)}
-                        className={error ? "border-destructive" : ""}
-                    />
+                    <div>
+                        <Input
+                            id={fieldConfig.key}
+                            type={fieldType === "email" ? "email" : fieldType === "url" ? "url" : "text"}
+                            placeholder={fieldConfig.placeholder || `Enter ${fieldConfig.label}`}
+                            value={value || ""}
+                            onChange={(e) => onChange(e.target.value)}
+                            className={error ? "border-destructive" : ""}
+                            maxLength={maxLength}
+                        />
+                        {fieldType === "short_text" && renderCharacterCount()}
+                    </div>
                 )
 
             case "slug":
@@ -135,14 +158,18 @@ const CMSCollectionFieldRendererComponent = ({
 
             case "long_text":
                 return (
-                    <Textarea
-                        id={fieldConfig.key}
-                        placeholder={fieldConfig.placeholder || `Enter ${fieldConfig.label}`}
-                        value={value || ""}
-                        onChange={(e) => onChange(e.target.value)}
-                        className={cn("min-h-[100px]", error ? "border-destructive" : "")}
-                        rows={configOptions?.rows || 4}
-                    />
+                    <div>
+                        <Textarea
+                            id={fieldConfig.key}
+                            placeholder={fieldConfig.placeholder || `Enter ${fieldConfig.label}`}
+                            value={value || ""}
+                            onChange={(e) => onChange(e.target.value)}
+                            className={cn("min-h-[100px]", error ? "border-destructive" : "")}
+                            rows={configOptions?.rows || 4}
+                            maxLength={maxLength}
+                        />
+                        {renderCharacterCount()}
+                    </div>
                 )
 
             case "number":
