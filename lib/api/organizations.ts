@@ -148,4 +148,44 @@ export const organizationsApi = {
     const response = await apiClient.put<ApiResponse<Organization>>(`/organizations/${id}`, data)
     return response.data.data
   },
+
+  updateOrgUserStatus: async (
+    organizationId: string,
+    orgUserId: string,
+    status: "active" | "suspended"
+  ) => {
+    const response = await apiClient.patch<ApiResponse<OrganizationUser>>(
+      `/organizations/${organizationId}/users/${orgUserId}/status`,
+      { status }
+    )
+    return response.data.data
+  },
+
+  suspendOwner: async (organizationId: string) => {
+    const response = await apiClient.patch<ApiResponse<void>>(
+      `/organizations/${organizationId}/owner/suspend`
+    )
+    return response.data
+  },
+
+  activateOwner: async (organizationId: string) => {
+    const response = await apiClient.patch<ApiResponse<void>>(
+      `/organizations/${organizationId}/owner/activate`
+    )
+    return response.data
+  },
+
+  resendInvitation: async (invitationId: string) => {
+    const response = await apiClient.post<ApiResponse<OrganizationInvitation>>(
+      `/invitations/${invitationId}/resend`
+    )
+    return response.data.data
+  },
+
+  deleteInvitation: async (invitationId: string) => {
+    const response = await apiClient.delete<ApiResponse<void>>(
+      `/invitations/${invitationId}`
+    )
+    return response.data
+  },
 }

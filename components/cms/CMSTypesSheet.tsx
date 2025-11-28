@@ -167,7 +167,7 @@ export function CMSTypesSheet({
         }
     }, [open])
 
-    const title = collectionSlug ? `${collectionName || collectionSlug} Types` : "Documentation"
+    const title = collectionSlug ? `${collectionName || collectionSlug} Docs` : "Documentation"
     const description = collectionSlug 
         ? `Auto-generated types for the ${collectionName || collectionSlug} collection.`
         : `Auto-generated types for ${projectName || "your project"}'s CMS collections.`
@@ -271,8 +271,8 @@ export function CMSTypesSheet({
                             </Button>
                         </div>
                     ) : data?.types ? (
-                        <ScrollArea className="h-full">
-                            <div className="p-4">
+                        <ScrollArea className="h-full grid grid-cols-1">
+                            <div className="p-4 grid grid-cols-1">
                                 <pre className="text-[13px] font-mono bg-muted/50 rounded-lg p-4 overflow-x-auto border">
                                     <code className="whitespace-pre">
                                         {highlightedCode}
