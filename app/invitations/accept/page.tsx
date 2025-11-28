@@ -7,7 +7,7 @@ interface AcceptInvitePageProps {
 export default async function AcceptInvitePage({
     searchParams,
 }: AcceptInvitePageProps) {
-    const { token } = searchParams;
+    const { token } = await searchParams;
     console.log(token);
     if (!token) {
         console.log("No token found");
