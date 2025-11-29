@@ -41,6 +41,10 @@ export class ProjectsService {
              * Maximum storage allocation in GB
              */
             maxStorageGB?: number;
+            /**
+             * Maximum number of API requests allowed
+             */
+            maxRequests?: number;
             providers: Array<{
                 /**
                  * Provider type
@@ -59,6 +63,18 @@ export class ProjectsService {
              * Whether monthly billing is active for this project
              */
             is_payment_active?: boolean;
+            /**
+             * Enable CMS functionality for this project
+             */
+            enableCms?: boolean;
+            /**
+             * Enable Email Marketing functionality for this project
+             */
+            enableEmailMarketing?: boolean;
+            /**
+             * Enable CRM functionality for this project
+             */
+            enableCrm?: boolean;
         },
     ): CancelablePromise<ProjectResponse> {
         return __request(OpenAPI, {
@@ -283,6 +299,22 @@ export class ProjectsService {
              * Activate/deactivate monthly billing
              */
             is_payment_active?: boolean;
+            /**
+             * Maximum number of API requests allowed
+             */
+            maxRequests?: number;
+            /**
+             * Enable CMS integration
+             */
+            enableCms?: boolean;
+            /**
+             * Enable Email Marketing integration
+             */
+            enableEmailMarketing?: boolean;
+            /**
+             * Enable CRM integration
+             */
+            enableCrm?: boolean;
         },
     ): CancelablePromise<ProjectResponse> {
         return __request(OpenAPI, {

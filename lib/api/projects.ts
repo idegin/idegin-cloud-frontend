@@ -12,6 +12,8 @@ export interface Project {
   publicKey: string
   secretKey: string
   maxStorageGB: number
+  maxRequests: number
+  requestsMade: number
   enableCms: boolean
   enableEmailMarketing: boolean
   enableCrm: boolean
@@ -78,6 +80,20 @@ export interface ProjectsResponse {
 
 export interface ProjectFullDetails {
   project: Project
+  storage: {
+    usedGB: number
+    maxGB: number
+    percentageUsed: number
+  }
+  requests: {
+    used: number
+    max: number
+    percentageUsed: number
+  }
+  cms: {
+    collectionsCount: number
+    entriesCount: number
+  }
   wallet: {
     id: string
     balance: number
@@ -99,6 +115,20 @@ export interface ProjectFullDetails {
 export interface ProjectDetailsForClient {
   project: Project & {
     next_billing_date?: string
+  }
+  storage: {
+    usedGB: number
+    maxGB: number
+    percentageUsed: number
+  }
+  requests: {
+    used: number
+    max: number
+    percentageUsed: number
+  }
+  cms: {
+    collectionsCount: number
+    entriesCount: number
   }
   wallet: {
     balance: number

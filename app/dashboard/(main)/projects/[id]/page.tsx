@@ -34,6 +34,7 @@ import {
     HardDrive,
     Database,
     Folder,
+    Zap,
 } from "lucide-react";
 import { ProjectDetailsLoading } from "./project-details-loading";
 import ProjectActionBtn from "./components/project-action-btn";
@@ -91,6 +92,8 @@ export default function ProjectDetailsPage({
     }, [params]);
 
     const { data, isLoading, error } = useProjectDetails(projectId || "");
+    console.log('PROJECT:::', { data, isLoading, error })
+
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("en-NG", {
@@ -170,12 +173,18 @@ export default function ProjectDetailsPage({
         );
     }
 
-    const { project, wallet, invoices, storage, cms } = data;
+    const { project, wallet, invoices, storage, cms, requests } = data;
     const totalUnpaid = wallet?.outstanding_balance || 0;
     const totalPages = Math.ceil(invoices.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const currentInvoices = invoices.slice(startIndex, endIndex);
+
+    const getRequestsProgressColor = (percentage: number) => {
+        if (percentage >= 80) return 'bg-destructive';
+        if (percentage >= 60) return 'bg-amber-500';
+        return 'bg-emerald-500';
+    };
 
     const goToNextPage = () => {
         setCurrentPage((prev) => Math.min(prev + 1, totalPages));
@@ -258,7 +267,56 @@ export default function ProjectDetailsPage({
                 </p>
             </div>
 
-            <div className='grid gap-6 md:grid-cols-2'>
+            <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                <Card>
+                    <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                        <CardTitle className='text-sm font-medium'>
+                            API Requests
+                        </CardTitle>
+                        <Zap className='h-4 w-4 text-muted-foreground' />
+                    </CardHeader>
+                    <CardContent>
+                        {requests ? (
+                            <>
+                                <div className='text-2xl font-bold'>
+                                    {requests.used.toLocaleString()}
+                                    <span className='text-lg text-muted-foreground font-normal'> / {requests.max.toLocaleString()}</span>
+                                </div>
+                                <div className='mt-3 space-y-2'>
+                                    <div className='w-full bg-muted rounded-full h-3 overflow-hidden'>
+                                        <div 
+                                            className={`h-3 rounded-full transition-all duration-500 ${getRequestsProgressColor(requests.percentageUsed)}`}
+                                            style={{ width: `${Math.min(requests.percentageUsed, 100)}%` }}
+                                        />
+                                    </div>
+                                    <div className='flex items-center justify-between'>
+                                        <p className='text-xs text-muted-foreground'>
+                                            {requests.percentageUsed.toFixed(1)}% of monthly limit
+                                        </p>
+                                        {requests.percentageUsed >= 80 && (
+                                            <Badge variant="outline" className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">
+                                                High Usage
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
+                                {requests.percentageUsed >= 80 && (
+                                    <div className='mt-3 rounded-lg border border-destructive/20 bg-destructive/5 p-2.5'>
+                                        <div className='flex items-start gap-2'>
+                                            <AlertCircle className='h-3.5 w-3.5 text-destructive mt-0.5 flex-shrink-0' />
+                                            <p className='text-xs text-destructive'>
+                                                You're approaching your request limit. Consider upgrading your plan.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <p className='text-sm text-muted-foreground'>Request data unavailable</p>
+                        )}
+                    </CardContent>
+                </Card>
+
                 <Card>
                     <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                         <CardTitle className='text-sm font-medium'>
@@ -274,26 +332,37 @@ export default function ProjectDetailsPage({
                                     <span className='text-lg text-muted-foreground font-normal'> / {storage.maxGB} GB</span>
                                 </div>
                                 <div className='mt-3 space-y-2'>
-                                    <div className='w-full bg-muted rounded-full h-2'>
+                                    <div className='w-full bg-muted rounded-full h-3 overflow-hidden'>
                                         <div 
-                                            className={`h-2 rounded-full transition-all ${
-                                                storage.percentageUsed > 90 
+                                            className={`h-3 rounded-full transition-all duration-500 ${
+                                                storage.percentageUsed >= 80 
                                                     ? 'bg-destructive' 
-                                                    : storage.percentageUsed > 75 
+                                                    : storage.percentageUsed >= 60 
                                                     ? 'bg-amber-500' 
-                                                    : 'bg-primary'
+                                                    : 'bg-emerald-500'
                                             }`}
                                             style={{ width: `${Math.min(storage.percentageUsed, 100)}%` }}
                                         />
                                     </div>
-                                    <p className='text-xs text-muted-foreground'>
-                                        {storage.percentageUsed.toFixed(1)}% used
-                                    </p>
+                                    <div className='flex items-center justify-between'>
+                                        <p className='text-xs text-muted-foreground'>
+                                            {storage.percentageUsed.toFixed(1)}% used
+                                        </p>
+                                        {storage.percentageUsed >= 80 && (
+                                            <Badge variant="outline" className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">
+                                                Almost Full
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </div>
-                                {storage.percentageUsed > 90 && (
-                                    <div className='mt-3 flex items-center gap-2 text-xs text-destructive'>
-                                        <AlertCircle className='h-3 w-3' />
-                                        <span>Storage almost full</span>
+                                {storage.percentageUsed >= 80 && (
+                                    <div className='mt-3 rounded-lg border border-destructive/20 bg-destructive/5 p-2.5'>
+                                        <div className='flex items-start gap-2'>
+                                            <AlertCircle className='h-3.5 w-3.5 text-destructive mt-0.5 flex-shrink-0' />
+                                            <p className='text-xs text-destructive'>
+                                                Storage almost full. Delete unused files or upgrade.
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                             </>
@@ -338,7 +407,9 @@ export default function ProjectDetailsPage({
                         )}
                     </CardContent>
                 </Card>
+            </div>
 
+            <div className='grid gap-6 md:grid-cols-2'>
                 <Card>
                     <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                         <CardTitle className='text-sm font-medium'>

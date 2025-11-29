@@ -20,7 +20,7 @@ interface ProjectProviderProps {
 }
 
 export function ProjectProvider({ children, clientId, projectId }: ProjectProviderProps) {
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery<ProjectFullDetails>({
     queryKey: ["project", projectId, clientId],
     queryFn: () => projectsApi.getFullDetails(projectId),
     enabled: !!projectId && !!clientId,

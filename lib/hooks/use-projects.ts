@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { projectsApi } from "@/lib/api/projects"
-import type { ProjectFilters } from "@/lib/api/projects"
+import type { ProjectFilters, ProjectFullDetails, ProjectDetailsForClient } from "@/lib/api/projects"
 
 export function useProjects(filters?: ProjectFilters) {
   return useQuery({
@@ -35,7 +35,7 @@ export function useProjectStats() {
 }
 
 export function useProjectFullDetails(id: string) {
-  return useQuery({
+  return useQuery<ProjectFullDetails>({
     queryKey: ["project", id, "full"],
     queryFn: () => projectsApi.getFullDetails(id),
     enabled: !!id,
@@ -43,7 +43,7 @@ export function useProjectFullDetails(id: string) {
 }
 
 export function useProjectDetails(id: string) {
-  return useQuery({
+  return useQuery<ProjectDetailsForClient>({
     queryKey: ["project", id, "details"],
     queryFn: () => projectsApi.getDetailsForClient(id),
     enabled: !!id,

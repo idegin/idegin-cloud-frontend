@@ -9,6 +9,7 @@ export interface ProjectIntegration {
     color: string
     disabledColor: string
     isNew?: boolean
+    comingSoon?: boolean
 }
 
 export const PROJECT_INTEGRATIONS: ProjectIntegration[] = [
@@ -30,7 +31,7 @@ export const PROJECT_INTEGRATIONS: ProjectIntegration[] = [
         icon: Users,
         color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20",
         disabledColor: "bg-muted/50 text-muted-foreground border-muted cursor-not-allowed opacity-60",
-        isNew: true,
+        comingSoon: true,
     },
     {
         id: "email",
@@ -40,7 +41,7 @@ export const PROJECT_INTEGRATIONS: ProjectIntegration[] = [
         icon: Mail,
         color: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20 hover:bg-purple-500/20",
         disabledColor: "bg-muted/50 text-muted-foreground border-muted cursor-not-allowed opacity-60",
-        isNew: true,
+        comingSoon: true,
     },
 ]
 

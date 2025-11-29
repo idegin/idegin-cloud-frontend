@@ -28,7 +28,8 @@ import {
     Database,
     HardDrive,
     Folder,
-    FileText
+    FileText,
+    Zap
 } from "lucide-react"
 import {
     DropdownMenu,
@@ -134,7 +135,7 @@ export default function ProjectDetailsPage() {
 
     const handleToggleBilling = () => {
         if (!data?.project) return
-        
+
         const action = data.project.is_payment_active ? 'disable' : 'enable'
         setBillingAction(action)
         setShowBillingDialog(true)
@@ -322,21 +323,21 @@ export default function ProjectDetailsPage() {
                                     Change Status
                                 </DropdownMenuSubTrigger>
                                 <DropdownMenuSubContent>
-                                    <DropdownMenuItem 
+                                    <DropdownMenuItem
                                         onClick={() => handleStatusChange('active')}
                                         disabled={project.status === 'active'}
                                     >
                                         <CheckCircle2 className="h-4 w-4 mr-2" />
                                         Active
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem 
+                                    <DropdownMenuItem
                                         onClick={() => handleStatusChange('in_dev')}
                                         disabled={project.status === 'in_dev'}
                                     >
                                         <Clock className="h-4 w-4 mr-2" />
                                         In Development
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem 
+                                    <DropdownMenuItem
                                         onClick={() => handleStatusChange('suspended')}
                                         disabled={project.status === 'suspended'}
                                     >
@@ -350,7 +351,7 @@ export default function ProjectDetailsPage() {
                                 Refresh Data
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                                 onClick={handleDelete}
                                 className="text-destructive focus:text-destructive"
                             >
@@ -365,13 +366,91 @@ export default function ProjectDetailsPage() {
                 </p>
             </div>
 
-            <AdminProjectIntegration 
+            <AdminProjectIntegration
                 integrationSettings={{
                     enableCms: project.enableCms ?? true,
                     enableEmailMarketing: project.enableEmailMarketing ?? true,
                     enableCrm: project.enableCrm ?? true,
                 }}
             />
+
+            {/* API Requests Usage - Full Width */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Zap className="h-5 w-5 text-primary" />
+                        API Requests Usage
+                    </CardTitle>
+                    <CardDescription>Monitor API usage and request limits for this billing cycle</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {data.requests ? (
+                        <div className="space-y-4">
+                            <div className="flex items-end justify-between">
+                                <div>
+                                    <p className="text-3xl font-bold">
+                                        {data.requests.used.toLocaleString()}
+                                        <span className="text-lg text-muted-foreground font-normal ml-1">
+                                            / {data.requests.max.toLocaleString()}
+                                        </span>
+                                    </p>
+                                    <p className="text-sm text-muted-foreground mt-1">requests this month</p>
+                                </div>
+                                <div className="text-right">
+                                    <Badge
+                                        variant="outline"
+                                        className={
+                                            data.requests.percentageUsed >= 80
+                                                ? "bg-destructive/10 text-destructive border-destructive/20"
+                                                : data.requests.percentageUsed >= 60
+                                                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                                                    : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                                        }
+                                    >
+                                        {data.requests.percentageUsed >= 80 ? "High Usage" : data.requests.percentageUsed >= 60 ? "Moderate" : "Healthy"}
+                                    </Badge>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="w-full bg-muted rounded-full h-4 overflow-hidden">
+                                    <div
+                                        className={`h-4 rounded-full transition-all duration-500 ${data.requests.percentageUsed >= 80
+                                                ? 'bg-destructive'
+                                                : data.requests.percentageUsed >= 60
+                                                    ? 'bg-amber-500'
+                                                    : 'bg-emerald-500'
+                                            }`}
+                                        style={{ width: `${Math.min(data.requests.percentageUsed, 100)}%` }}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-muted-foreground">
+                                        {data.requests.percentageUsed.toFixed(1)}% of monthly limit used
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                        {(data.requests.max - data.requests.used).toLocaleString()} remaining
+                                    </span>
+                                </div>
+                            </div>
+                            {data.requests.percentageUsed >= 80 && (
+                                <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3">
+                                    <div className="flex items-start gap-2">
+                                        <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                                        <div className="flex-1">
+                                            <p className="text-sm font-medium text-destructive">High API Usage Detected</p>
+                                            <p className="text-xs text-destructive/80 mt-1">
+                                                This project is approaching its monthly request limit. Consider upgrading the plan to avoid service interruptions.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">API request data unavailable</p>
+                    )}
+                </CardContent>
+            </Card>
 
             <div className="grid gap-6 lg:grid-cols-2">
                 {/* Storage Usage Card */}
@@ -393,23 +472,29 @@ export default function ProjectDetailsPage() {
                                             {data.storage.usedGB.toFixed(2)} GB / {data.storage.maxGB} GB
                                         </span>
                                     </div>
-                                    <div className="w-full bg-muted rounded-full h-2.5">
-                                        <div 
-                                            className={`h-2.5 rounded-full transition-all ${
-                                                data.storage.percentageUsed > 90 
-                                                    ? 'bg-destructive' 
-                                                    : data.storage.percentageUsed > 75 
-                                                    ? 'bg-amber-500' 
-                                                    : 'bg-primary'
-                                            }`}
+                                    <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+                                        <div
+                                            className={`h-3 rounded-full transition-all duration-500 ${data.storage.percentageUsed >= 80
+                                                    ? 'bg-destructive'
+                                                    : data.storage.percentageUsed >= 60
+                                                        ? 'bg-amber-500'
+                                                        : 'bg-emerald-500'
+                                                }`}
                                             style={{ width: `${Math.min(data.storage.percentageUsed, 100)}%` }}
                                         />
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
-                                        {data.storage.percentageUsed.toFixed(1)}% of total storage used
-                                    </p>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-xs text-muted-foreground">
+                                            {data.storage.percentageUsed.toFixed(1)}% of total storage used
+                                        </p>
+                                        {data.storage.percentageUsed >= 80 && (
+                                            <Badge variant="outline" className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">
+                                                Almost Full
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </div>
-                                {data.storage.percentageUsed > 90 && (
+                                {data.storage.percentageUsed >= 80 && (
                                     <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3">
                                         <div className="flex items-start gap-2">
                                             <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
@@ -422,6 +507,41 @@ export default function ProjectDetailsPage() {
                                         </div>
                                     </div>
                                 )}
+                            </>
+                        ) : (
+                            <p className="text-sm text-muted-foreground">Storage data unavailable</p>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* CMS Statistics Card */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Database className="h-5 w-5 text-primary" />
+                            CMS Statistics
+                        </CardTitle>
+                        <CardDescription>Content management system overview</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {data.cms ? (
+                            <>
+                                <div className="grid grid-cols-2 gap-4">
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <Folder className="h-4 w-4 text-muted-foreground" />
+                                            <span className="text-sm text-muted-foreground">Collections</span>
+                                        </div>
+                                        <div>
+                                            <p>
+                                                Consider upgrading your storage plan or deleting unused files.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                </div>
+
                             </>
                         ) : (
                             <p className="text-sm text-muted-foreground">Storage data unavailable</p>
@@ -457,8 +577,8 @@ export default function ProjectDetailsPage() {
                                         <p className="text-2xl font-bold">{data.cms.entriesCount}</p>
                                     </div>
                                 </div>
-                                <Button 
-                                    variant="outline" 
+                                <Button
+                                    variant="outline"
                                     className="w-full"
                                     onClick={() => router.push(`/admin/clients/${organizationId}/projects/${projectId}/cms`)}
                                 >
@@ -503,8 +623,8 @@ export default function ProjectDetailsPage() {
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground mb-1">Payment Status</p>
-                            <Badge 
-                                variant="outline" 
+                            <Badge
+                                variant="outline"
                                 className={project.is_payment_active ? 'bg-green-500/10 text-green-700 border-green-500/20' : 'bg-red-500/10 text-red-700 border-red-500/20'}
                             >
                                 {project.is_payment_active ? 'Active' : 'Inactive'}
@@ -541,9 +661,9 @@ export default function ProjectDetailsPage() {
                                         </div>
                                     )}
                                     {provider.type === 'fly.io' && provider.appName && (
-                                        <Button 
-                                            variant="outline" 
-                                            size="sm" 
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
                                             className="w-full"
                                             onClick={() => window.open(`https://fly.io/apps/${provider.appName}`, '_blank')}
                                         >
@@ -575,15 +695,15 @@ export default function ProjectDetailsPage() {
                             <code className="flex-1 p-3 bg-muted rounded font-mono text-sm break-all">
                                 {showSecretKey ? project.secretKey : project.secretKey.replace(/./g, '•')}
                             </code>
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 size="sm"
                                 onClick={() => setShowSecretKey(!showSecretKey)}
                             >
                                 {showSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </Button>
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 size="sm"
                                 onClick={() => copyToClipboard(project.secretKey, 'Secret key')}
                             >
@@ -601,7 +721,7 @@ export default function ProjectDetailsPage() {
                             <div className="flex-1">
                                 <h4 className="text-sm font-semibold text-amber-800 mb-1">Security Warning</h4>
                                 <p className="text-sm text-amber-700">
-                                    Keep your secret key secure and never share it publicly. This key provides full access to your CMS data. 
+                                    Keep your secret key secure and never share it publicly. This key provides full access to your CMS data.
                                     Store it in environment variables in production and never commit it to version control.
                                 </p>
                             </div>
@@ -618,7 +738,7 @@ export default function ProjectDetailsPage() {
                             {billingAction === 'enable' ? 'Enable' : 'Disable'} Billing?
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            {billingAction === 'enable' 
+                            {billingAction === 'enable'
                                 ? 'Enabling billing will activate automatic charges for this project. The organization wallet will be debited based on the monthly billing amount.'
                                 : 'Disabling billing will stop automatic charges for this project. The project will remain operational but no further billing will occur.'
                             }
@@ -626,7 +746,7 @@ export default function ProjectDetailsPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                             onClick={confirmToggleBilling}
                             disabled={toggleBillingMutation.isPending}
                         >
@@ -644,15 +764,15 @@ export default function ProjectDetailsPage() {
                         <AlertDialogDescription>
                             You are about to change the project status from{' '}
                             <span className="font-semibold">
-                                {project.status === 'active' ? 'Active' : 
-                                 project.status === 'in_dev' ? 'In Development' : 'Suspended'}
+                                {project.status === 'active' ? 'Active' :
+                                    project.status === 'in_dev' ? 'In Development' : 'Suspended'}
                             </span>
                             {' '}to{' '}
                             <span className="font-semibold">
-                                {selectedStatus === 'active' ? 'Active' : 
-                                 selectedStatus === 'in_dev' ? 'In Development' : 'Suspended'}
+                                {selectedStatus === 'active' ? 'Active' :
+                                    selectedStatus === 'in_dev' ? 'In Development' : 'Suspended'}
                             </span>.
-                            {selectedStatus === 'suspended' && 
+                            {selectedStatus === 'suspended' &&
                                 ' This will suspend all project activities and may affect service availability.'}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
@@ -660,7 +780,7 @@ export default function ProjectDetailsPage() {
                         <AlertDialogCancel disabled={updateStatusMutation.isPending}>
                             Cancel
                         </AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                             onClick={confirmStatusChange}
                             disabled={updateStatusMutation.isPending}
                         >

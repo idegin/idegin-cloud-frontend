@@ -21,6 +21,7 @@ interface FormData {
     description: string
     monthly_billing: string
     maxStorageGB: string
+    maxRequests: string
     enableCms: boolean
     enableEmailMarketing: boolean
     enableCrm: boolean
@@ -40,6 +41,7 @@ export default function EditProjectPage() {
         description: "",
         monthly_billing: "",
         maxStorageGB: "1",
+        maxRequests: "400",
         enableCms: true,
         enableEmailMarketing: true,
         enableCrm: true,
@@ -53,6 +55,7 @@ export default function EditProjectPage() {
                 description: project.description || "",
                 monthly_billing: project.monthly_billing?.toString() || "",
                 maxStorageGB: project.maxStorageGB?.toString() || "1",
+                maxRequests: project.maxRequests?.toString() || "400",
                 enableCms: project.enableCms ?? true,
                 enableEmailMarketing: project.enableEmailMarketing ?? true,
                 enableCrm: project.enableCrm ?? true,
@@ -73,6 +76,10 @@ export default function EditProjectPage() {
                 projectName: formData.projectName,
                 description: formData.description,
                 monthly_billing: parseFloat(formData.monthly_billing) || 0,
+                maxRequests: parseInt(formData.maxRequests) || 400,
+                enableCms: formData.enableCms,
+                enableEmailMarketing: formData.enableEmailMarketing,
+                enableCrm: formData.enableCrm,
             })
 
             toast({
@@ -240,6 +247,24 @@ export default function EditProjectPage() {
                             </p>
                         </div>
 
+                        <div className="space-y-2">
+                            <Label htmlFor="maxRequests" className="text-sm font-medium">
+                                Max API Requests
+                            </Label>
+                            <Input
+                                id="maxRequests"
+                                type="number"
+                                placeholder="400"
+                                value={formData.maxRequests}
+                                onChange={(e) => updateFormData({ maxRequests: e.target.value })}
+                                className="h-11"
+                                min="1"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Maximum number of API requests allowed for this project
+                            </p>
+                        </div>
+
                         <div className="space-y-4 pt-4 border-t">
                             <div>
                                 <Label className="text-sm font-medium">Project Integrations</Label>
@@ -270,15 +295,12 @@ export default function EditProjectPage() {
                                             <Switch
                                                 checked={isEnabled}
                                                 onCheckedChange={(checked) => updateFormData({ [integration.key]: checked } as Partial<FormData>)}
-                                                disabled
                                             />
                                         </div>
                                     )
                                 })}
                             </div>
-                            <p className="text-xs text-muted-foreground italic">
-                                Note: Integration settings cannot be changed after project creation.
-                            </p>
+
                         </div>
                     </CardContent>
                     <CardFooter className="flex justify-between border-t pt-6">

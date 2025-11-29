@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
     Select,
     SelectContent,
@@ -46,6 +47,10 @@ export function CreateProjectForm() {
         budget: "",
         technologies: "",
         repositoryUrl: "",
+        maxRequests: "400",
+        enableCms: true,
+        enableEmailMarketing: false,
+        enableCrm: false,
     });
 
     const { data: clients } = useQuery({
@@ -92,6 +97,10 @@ export function CreateProjectForm() {
                 ? formData.technologies.split(",").map((t) => t.trim())
                 : undefined,
             repositoryUrl: formData.repositoryUrl || undefined,
+            maxRequests: formData.maxRequests ? Number(formData.maxRequests) : 400,
+            enableCms: formData.enableCms,
+            enableEmailMarketing: formData.enableEmailMarketing,
+            enableCrm: formData.enableCrm,
         });
     };
 
@@ -257,6 +266,86 @@ export function CreateProjectForm() {
                             }
                             placeholder='https://github.com/username/repo'
                         />
+                    </div>
+
+                    <div className='space-y-2'>
+                        <Label htmlFor='maxRequests'>Max API Requests</Label>
+                        <Input
+                            id='maxRequests'
+                            type='number'
+                            value={formData.maxRequests}
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    maxRequests: e.target.value,
+                                })
+                            }
+                            placeholder='400'
+                            min='1'
+                        />
+                        <p className='text-xs text-muted-foreground'>
+                            Maximum number of API requests allowed (default: 400)
+                        </p>
+                    </div>
+
+                    <div className='space-y-4'>
+                        <Label>Project Integrations</Label>
+                        <div className='space-y-3'>
+                            <div className='flex items-center justify-between'>
+                                <div className='space-y-0.5'>
+                                    <Label htmlFor='enableCms'>Enable CMS</Label>
+                                    <p className='text-xs text-muted-foreground'>
+                                        Allow content management for this project
+                                    </p>
+                                </div>
+                                <Switch
+                                    id='enableCms'
+                                    checked={formData.enableCms}
+                                    onCheckedChange={(checked) =>
+                                        setFormData({
+                                            ...formData,
+                                            enableCms: checked,
+                                        })
+                                    }
+                                />
+                            </div>
+                            <div className='flex items-center justify-between'>
+                                <div className='space-y-0.5'>
+                                    <Label htmlFor='enableEmailMarketing'>Enable Email Marketing</Label>
+                                    <p className='text-xs text-muted-foreground'>
+                                        Allow email marketing features for this project
+                                    </p>
+                                </div>
+                                <Switch
+                                    id='enableEmailMarketing'
+                                    checked={formData.enableEmailMarketing}
+                                    onCheckedChange={(checked) =>
+                                        setFormData({
+                                            ...formData,
+                                            enableEmailMarketing: checked,
+                                        })
+                                    }
+                                />
+                            </div>
+                            <div className='flex items-center justify-between'>
+                                <div className='space-y-0.5'>
+                                    <Label htmlFor='enableCrm'>Enable CRM</Label>
+                                    <p className='text-xs text-muted-foreground'>
+                                        Allow CRM features for this project
+                                    </p>
+                                </div>
+                                <Switch
+                                    id='enableCrm'
+                                    checked={formData.enableCrm}
+                                    onCheckedChange={(checked) =>
+                                        setFormData({
+                                            ...formData,
+                                            enableCrm: checked,
+                                        })
+                                    }
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <div className='flex gap-3'>
