@@ -77,6 +77,11 @@ export default function EditFieldsPage() {
                 return undefined
             })(),
             defaultValue: field.defaultStringValue || field.configOptions?.defaultValue,
+            nestedSchemaConfig: field.configOptions?.nestedSchemaConfig,
+            relationshipConfig: field.configOptions?.relationshipConfig,
+            fileConfig: field.configOptions?.fileConfig,
+            dateConfig: field.configOptions?.dateConfig,
+            booleanConfig: field.configOptions?.booleanConfig,
         }))
     }, [cmsCollectionData.fields])
 

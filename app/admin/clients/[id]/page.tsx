@@ -219,6 +219,111 @@ export default function OrganizationDetailsPage() {
                 </Card>
             </div>
 
+             <div className="grid gap-6 lg:grid-cols-2">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Recent Transactions</CardTitle>
+                            <CardDescription>Latest wallet activity</CardDescription>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/clients/${organization.id}/transactions`)}>
+                            View All
+                            <ArrowUpRight className="h-4 w-4 ml-1" />
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        {wallet && wallet.transactions.length > 0 ? (
+                            <div className="space-y-3">
+                                {wallet.transactions.slice(0, 5).map((transaction) => (
+                                    <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-full ${transaction.type === 'credit' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                                                {transaction.type === 'credit' ? (
+                                                    <ArrowDownRight className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                                ) : (
+                                                    <ArrowUpRight className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium line-clamp-1">{transaction.description}</p>
+                                                <p className="text-xs text-muted-foreground">{formatDateTime(transaction.createdAt)}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={`text-sm font-semibold ${transaction.type === 'credit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                                {transaction.type === 'credit' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                                            </p>
+                                            <Badge 
+                                                variant="outline" 
+                                                className={`text-xs mt-1 ${getStatusBadge(transaction.status).className}`}
+                                            >
+                                                {transaction.status}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 border border-dashed rounded-lg">
+                                <Activity className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                                <p className="text-sm text-muted-foreground">No transactions yet</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Projects</CardTitle>
+                            <CardDescription>Organization's hosted projects</CardDescription>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/clients/${organization.id}/projects`)}>
+                            View All
+                            <ArrowUpRight className="h-4 w-4 ml-1" />
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        {organization.projects.length > 0 ? (
+                            <div className="space-y-3">
+                                {organization.projects.slice(0, 5).map((project) => (
+                                    <div 
+                                        key={project.id} 
+                                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
+                                        onClick={() => router.push(`/admin/clients/${organizationId}/projects/${project.id}`)}
+                                    >
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium line-clamp-1">{project.projectName}</p>
+                                            <p className="text-xs text-muted-foreground line-clamp-1">{project.description}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <Badge 
+                                                    variant="outline" 
+                                                    className={`text-xs ${getStatusBadge(project.status).className}`}
+                                                >
+                                                    {project.status}
+                                                </Badge>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {formatCurrency(project.monthly_billing)}/month
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <ArrowUpRight className="h-4 w-4 text-muted-foreground ml-2" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 border border-dashed rounded-lg">
+                                <FolderKanban className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                                <p className="text-sm text-muted-foreground">No projects yet</p>
+                                <Button variant="link" size="sm" className="mt-2" onClick={() => router.push("/admin/create")}>
+                                    Create your first project
+                                </Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+
             <div className="grid gap-6 lg:grid-cols-3">
                 <Card className="lg:col-span-2">
                     <CardHeader className="flex flex-row items-center justify-between">
@@ -340,110 +445,7 @@ export default function OrganizationDetailsPage() {
                 <OrgWalletDetails wallet={wallet} organization={organization} />
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-2">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Recent Transactions</CardTitle>
-                            <CardDescription>Latest wallet activity</CardDescription>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/clients/${organization.id}/transactions`)}>
-                            View All
-                            <ArrowUpRight className="h-4 w-4 ml-1" />
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        {wallet && wallet.transactions.length > 0 ? (
-                            <div className="space-y-3">
-                                {wallet.transactions.slice(0, 5).map((transaction) => (
-                                    <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`p-2 rounded-full ${transaction.type === 'credit' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-                                                {transaction.type === 'credit' ? (
-                                                    <ArrowDownRight className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                                ) : (
-                                                    <ArrowUpRight className="h-4 w-4 text-red-600 dark:text-red-400" />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium line-clamp-1">{transaction.description}</p>
-                                                <p className="text-xs text-muted-foreground">{formatDateTime(transaction.createdAt)}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className={`text-sm font-semibold ${transaction.type === 'credit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                                {transaction.type === 'credit' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                                            </p>
-                                            <Badge 
-                                                variant="outline" 
-                                                className={`text-xs mt-1 ${getStatusBadge(transaction.status).className}`}
-                                            >
-                                                {transaction.status}
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-8 border border-dashed rounded-lg">
-                                <Activity className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                                <p className="text-sm text-muted-foreground">No transactions yet</p>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Projects</CardTitle>
-                            <CardDescription>Organization's hosted projects</CardDescription>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/clients/${organization.id}/projects`)}>
-                            View All
-                            <ArrowUpRight className="h-4 w-4 ml-1" />
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        {organization.projects.length > 0 ? (
-                            <div className="space-y-3">
-                                {organization.projects.slice(0, 5).map((project) => (
-                                    <div 
-                                        key={project.id} 
-                                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-                                        onClick={() => router.push(`/admin/clients/${organizationId}/projects/${project.id}`)}
-                                    >
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium line-clamp-1">{project.projectName}</p>
-                                            <p className="text-xs text-muted-foreground line-clamp-1">{project.description}</p>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <Badge 
-                                                    variant="outline" 
-                                                    className={`text-xs ${getStatusBadge(project.status).className}`}
-                                                >
-                                                    {project.status}
-                                                </Badge>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {formatCurrency(project.monthly_billing)}/month
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <ArrowUpRight className="h-4 w-4 text-muted-foreground ml-2" />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-8 border border-dashed rounded-lg">
-                                <FolderKanban className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                                <p className="text-sm text-muted-foreground">No projects yet</p>
-                                <Button variant="link" size="sm" className="mt-2" onClick={() => router.push("/admin/create")}>
-                                    Create your first project
-                                </Button>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
+           
 
             <Card>
                 <CardHeader>

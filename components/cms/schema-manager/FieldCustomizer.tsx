@@ -486,7 +486,7 @@ export function FieldCustomizer({
                                 <FormItem className="flex items-center justify-between p-3 rounded-lg border bg-card">
                                     <div className="space-y-0.5">
                                         <FormLabel className="text-sm font-medium cursor-pointer">
-                                            Read Only
+                                            Locked Field
                                         </FormLabel>
                                         <FormDescription>
                                             Field cannot be edited by users

@@ -128,8 +128,8 @@ const mockTransactions = [
 
 const mockOrganization = {
     id: "org-1",
-    name: "Test Organization",
-    slug: "test-organization",
+    name: "Company Inc.",
+    slug: "company-inc",
 }
 
 const mockWallet = {
