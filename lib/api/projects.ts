@@ -11,6 +11,10 @@ export interface Project {
   is_payment_active: boolean
   publicKey: string
   secretKey: string
+  maxStorageGB: number
+  enableCms: boolean
+  enableEmailMarketing: boolean
+  enableCrm: boolean
   createdAt: string
   updatedAt: string
   organization?: {

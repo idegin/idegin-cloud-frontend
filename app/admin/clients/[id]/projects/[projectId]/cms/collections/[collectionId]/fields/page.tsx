@@ -136,6 +136,10 @@ export default function EditFieldsPage() {
             if (field.relationshipConfig) {
                 configOptions.relationshipConfig = field.relationshipConfig
             }
+            
+            if (field.nestedSchemaConfig) {
+                configOptions.nestedSchemaConfig = field.nestedSchemaConfig
+            }
 
             const fieldData: any = {
                 indexOrder: String(index),

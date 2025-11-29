@@ -95,7 +95,7 @@ export default function EntryDetailsPage() {
         return processed
     }
 
-    const transformEntryDataForForm = async (entryData: Record<string, any>, fields: any[]) => {
+    const transformEntryDataForForm = async (entryData: Record<string, any>, fields: any[]): Promise<Record<string, any>> => {
         const transformed = { ...entryData }
         
         for (const field of fields) {
@@ -144,12 +144,36 @@ export default function EntryDetailsPage() {
                     }
                 }
             }
+            
+            // Handle files inside nested_schema fields
+            if (fieldType === 'nested_schema' && fieldKey && transformed[fieldKey]) {
+                const nestedValue = transformed[fieldKey]
+                const nestedFields = field.configOptions?.nestedSchemaConfig?.fields || []
+                
+                const nestedFieldConfigs = nestedFields.map((nf: any) => ({
+                    fieldConfig: {
+                        key: nf.key,
+                        type: nf.type,
+                        label: nf.label,
+                    },
+                    configOptions: nf.configOptions || {},
+                }))
+                
+                if (Array.isArray(nestedValue)) {
+                    const transformedItems = await Promise.all(
+                        nestedValue.map(item => transformEntryDataForForm(item, nestedFieldConfigs))
+                    )
+                    transformed[fieldKey] = transformedItems
+                } else if (typeof nestedValue === 'object' && nestedValue !== null) {
+                    transformed[fieldKey] = await transformEntryDataForForm(nestedValue, nestedFieldConfigs)
+                }
+            }
         }
         
         return transformed
     }
 
-    const processFileFields = async (data: Record<string, any>, fields: any[]) => {
+    const processFileFields = async (data: Record<string, any>, fields: any[]): Promise<Record<string, any>> => {
         const processed = { ...data }
         
         for (const field of fields) {
@@ -190,6 +214,29 @@ export default function EntryDetailsPage() {
                     processed[fieldKey] = fileValue
                 } else {
                     delete processed[fieldKey]
+                }
+            }
+            
+            // Handle nested schema fields with file fields inside
+            if (fieldType === 'nested_schema' && fieldKey && processed[fieldKey]) {
+                const nestedValue = processed[fieldKey]
+                const nestedFields = field.configOptions?.nestedSchemaConfig?.fields || []
+                
+                // Build nested field configs for recursive processing
+                const nestedFieldConfigs = nestedFields.map((nf: any) => ({
+                    fieldConfig: nf,
+                    configOptions: nf.configOptions || {},
+                }))
+                
+                if (Array.isArray(nestedValue)) {
+                    const processedItems = []
+                    for (const item of nestedValue) {
+                        const processedItem = await processFileFields(item, nestedFieldConfigs)
+                        processedItems.push(processedItem)
+                    }
+                    processed[fieldKey] = processedItems
+                } else if (typeof nestedValue === 'object' && nestedValue !== null) {
+                    processed[fieldKey] = await processFileFields(nestedValue, nestedFieldConfigs)
                 }
             }
         }

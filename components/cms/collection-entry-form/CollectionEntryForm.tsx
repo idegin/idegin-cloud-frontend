@@ -391,7 +391,8 @@ export function CollectionEntryForm({
                             const isFullWidth = fieldType === "rich_text" || 
                                               fieldType === "long_text" ||
                                               fieldType === "file" ||
-                                              fieldType === "json"
+                                              fieldType === "json" ||
+                                              fieldType === "nested_schema"
                             
                             return (
                                 <div 

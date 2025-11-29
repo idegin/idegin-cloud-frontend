@@ -479,7 +479,7 @@ export function FieldCustomizer({
                             )}
                         />
 
-                        <FormField
+                        {process.env.NODE_ENV !== "production" && <FormField
                             control={form.control}
                             name="readonly"
                             render={({ field }) => (
@@ -500,7 +500,7 @@ export function FieldCustomizer({
                                     </FormControl>
                                 </FormItem>
                             )}
-                        />
+                        />}
 
                         <FormField
                             control={form.control}

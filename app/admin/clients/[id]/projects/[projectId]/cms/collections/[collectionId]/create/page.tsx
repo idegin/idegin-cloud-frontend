@@ -51,7 +51,7 @@ export default function CreateEntryPage() {
         return processed
     }
 
-    const processFileFields = async (data: Record<string, any>, fields: any[]) => {
+    const processFileFields = async (data: Record<string, any>, fields: any[]): Promise<Record<string, any>> => {
         const processed = { ...data }
         
         for (const field of fields) {
@@ -94,6 +94,29 @@ export default function CreateEntryPage() {
                     delete processed[fieldKey]
                 }
             }
+            
+            // Handle nested schema fields with file fields inside
+            if (fieldType === 'nested_schema' && fieldKey && processed[fieldKey]) {
+                const nestedValue = processed[fieldKey]
+                const nestedFields = field.configOptions?.nestedSchemaConfig?.fields || []
+                
+                // Build nested field configs for recursive processing
+                const nestedFieldConfigs = nestedFields.map((nf: any) => ({
+                    fieldConfig: nf,
+                    configOptions: nf.configOptions || {},
+                }))
+                
+                if (Array.isArray(nestedValue)) {
+                    const processedItems = []
+                    for (const item of nestedValue) {
+                        const processedItem = await processFileFields(item, nestedFieldConfigs)
+                        processedItems.push(processedItem)
+                    }
+                    processed[fieldKey] = processedItems
+                } else if (typeof nestedValue === 'object' && nestedValue !== null) {
+                    processed[fieldKey] = await processFileFields(nestedValue, nestedFieldConfigs)
+                }
+            }
         }
         
         return processed
@@ -104,7 +127,7 @@ export default function CreateEntryPage() {
             setIsSubmitting(true)
             // First extract IDs from relationship fields
             let processedData = processRelationshipFields(data, cmsCollectionData.fields)
-            // Then process file uploads
+            // Then process file uploads (including nested schema files)
             processedData = await processFileFields(processedData, cmsCollectionData.fields)
 
             if (createdEntry) {

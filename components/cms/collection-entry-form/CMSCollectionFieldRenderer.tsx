@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, memo, useMemo, useCallback } from "react"
+import React, { useState, memo, useMemo, useCallback, useEffect, useRef } from "react"
 import { CMSFieldContainer } from "./CMSFieldContainer"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -30,6 +30,118 @@ import { RelationshipSelector } from "@/components/cms/relationship-selector"
 import { Card } from "@/components/ui/card"
 import { Plus, Trash2 } from "lucide-react"
 import { getFieldTypeConfig } from "@/components/cms/schema-manager/field-types-config"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
+interface NestedSchemaItemProps {
+    itemValue: Record<string, any>
+    nestedFields: any[]
+    field: CMSCollectionField
+    projectId?: string
+    onChange: (updatedItem: Record<string, any>) => void
+}
+
+const NestedSchemaItem = memo(({ itemValue, nestedFields, field, projectId, onChange }: NestedSchemaItemProps) => {
+    const [localState, setLocalState] = useState<Record<string, any>>(itemValue || {})
+    const debounceRef = useRef<NodeJS.Timeout | null>(null)
+    const isInitialMount = useRef(true)
+
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false
+            return
+        }
+        
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current)
+        }
+        
+        debounceRef.current = setTimeout(() => {
+            onChange(localState)
+        }, 150)
+        
+        return () => {
+            if (debounceRef.current) {
+                clearTimeout(debounceRef.current)
+            }
+        }
+    }, [localState, onChange])
+
+    useEffect(() => {
+        if (JSON.stringify(itemValue) !== JSON.stringify(localState)) {
+            setLocalState(itemValue || {})
+        }
+    }, [itemValue])
+
+    const updateField = useCallback((fieldKey: string, fieldValue: any) => {
+        setLocalState(prev => ({ ...prev, [fieldKey]: fieldValue }))
+    }, [])
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {nestedFields.map((nestedField: any) => {
+                const nestedFieldType = nestedField.type?.toLowerCase() || "short_text"
+                const isNestedFullWidth = nestedFieldType === "rich_text" || 
+                                          nestedFieldType === "long_text" ||
+                                          nestedFieldType === "file" ||
+                                          nestedFieldType === "json"
+                
+                const nestedFieldConfig: CMSCollectionField = {
+                    id: `${field.id}-${nestedField.key}`,
+                    collectionId: field.collectionId,
+                    schemaId: field.schemaId,
+                    parentFieldId: field.id,
+                    indexOrder: "0",
+                    defaultBooleanValue: false,
+                    defaultStringValue: "",
+                    fieldConfig: {
+                        key: nestedField.key,
+                        label: nestedField.label,
+                        type: nestedField.type,
+                        placeholder: nestedField.placeholder,
+                        helpText: nestedField.helpText,
+                    },
+                    validationRules: { 
+                        required: nestedField.required,
+                        maxLength: nestedField.maxLength,
+                        minLength: nestedField.minLength,
+                    },
+                    configOptions: nestedField.configOptions || {},
+                    dropdownOptions: nestedField.dropdownOptions || [],
+                    relatedCollectionId: nestedField.relatedCollectionId,
+                    createdById: "",
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                }
+                
+                return (
+                    <div 
+                        key={nestedField.key} 
+                        className={cn(isNestedFullWidth && "md:col-span-2")}
+                    >
+                        <CMSCollectionFieldRenderer
+                            field={nestedFieldConfig}
+                            value={localState[nestedField.key]}
+                            onChange={(v) => updateField(nestedField.key, v)}
+                            projectId={projectId}
+                        />
+                    </div>
+                )
+            })}
+        </div>
+    )
+})
+
+NestedSchemaItem.displayName = "NestedSchemaItem"
 
 interface CMSCollectionFieldRendererProps {
     field: CMSCollectionField
@@ -440,85 +552,80 @@ const CMSCollectionFieldRendererComponent = ({
                         nestedFields.forEach((nf: any) => {
                             newItem[nf.key] = null
                         })
-                        onChange([...nestedValue as any[], newItem])
+                        const currentArray = Array.isArray(value) ? value : []
+                        onChange([...currentArray, newItem])
                     }
                 }
                 
                 const removeNestedItem = (index: number) => {
-                    if (isMultipleNested && Array.isArray(nestedValue)) {
-                        onChange(nestedValue.filter((_, i) => i !== index))
+                    if (isMultipleNested && Array.isArray(value)) {
+                        onChange(value.filter((_, i) => i !== index))
                     }
                 }
                 
-                const updateNestedField = (index: number | null, fieldKey: string, fieldValue: any) => {
-                    if (isMultipleNested && typeof index === "number" && Array.isArray(nestedValue)) {
-                        const updated = [...nestedValue]
-                        updated[index] = { ...updated[index], [fieldKey]: fieldValue }
-                        onChange(updated)
-                    } else if (!isMultipleNested) {
-                        onChange({ ...nestedValue as Record<string, any>, [fieldKey]: fieldValue })
+                const handleItemChange = useCallback((index: number, updatedItem: Record<string, any>) => {
+                    if (isMultipleNested && Array.isArray(value)) {
+                        const currentArray = [...value]
+                        currentArray[index] = updatedItem
+                        onChange(currentArray)
                     }
-                }
+                }, [isMultipleNested, value, onChange])
                 
-                const renderNestedFields = (itemValue: Record<string, any>, itemIndex: number | null) => {
-                    return nestedFields.map((nestedField: any) => {
-                        const fieldTypeConfig = getFieldTypeConfig(nestedField.type)
-                        const FieldIcon = fieldTypeConfig?.icon
-                        
-                        return (
-                            <div key={nestedField.key} className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    {FieldIcon && (
-                                        <div className={cn(
-                                            "inline-flex items-center justify-center rounded-md p-1",
-                                            fieldTypeConfig.displayColor
-                                        )}>
-                                            <FieldIcon className="h-3 w-3" />
-                                        </div>
-                                    )}
-                                    <span className="text-sm font-medium">{nestedField.label}</span>
-                                    {nestedField.required && <span className="text-red-500">*</span>}
-                                </div>
-                                <CMSCollectionFieldRenderer
-                                    field={{
-                                        ...field,
-                                        fieldConfig: nestedField,
-                                        validationRules: { required: nestedField.required },
-                                        configOptions: nestedField.configOptions || {},
-                                        dropdownOptions: nestedField.dropdownOptions || []
-                                    }}
-                                    value={itemValue?.[nestedField.key]}
-                                    onChange={(v) => updateNestedField(itemIndex, nestedField.key, v)}
-                                    projectId={projectId}
-                                />
-                            </div>
-                        )
-                    })
-                }
+                const handleSingleItemChange = useCallback((updatedItem: Record<string, any>) => {
+                    onChange(updatedItem)
+                }, [onChange])
                 
                 return (
                     <div className="space-y-4">
                         {isMultipleNested ? (
                             <>
-                                {(nestedValue as any[]).map((item, index) => (
-                                    <Card key={index} className="p-4 space-y-4 border-l-4 border-l-pink-500">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm font-medium text-muted-foreground">
-                                                Item {index + 1}
-                                            </span>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => removeNestedItem(index)}
-                                                className="text-destructive hover:text-destructive"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                        {renderNestedFields(item, index)}
-                                    </Card>
-                                ))}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {(nestedValue as any[]).map((item, index) => (
+                                        <Card key={index} className="p-4 space-y-4 border-l-4 border-l-pink-500">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-muted-foreground">
+                                                    Item {index + 1}
+                                                </span>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-destructive hover:text-destructive"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Delete Item {index + 1}?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This action cannot be undone. This will permanently delete this item and all its data.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                onClick={() => removeNestedItem(index)}
+                                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                            >
+                                                                Delete
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </div>
+                                            <NestedSchemaItem
+                                                itemValue={item}
+                                                nestedFields={nestedFields}
+                                                field={field}
+                                                projectId={projectId}
+                                                onChange={(updatedItem) => handleItemChange(index, updatedItem)}
+                                            />
+                                        </Card>
+                                    ))}
+                                </div>
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -530,8 +637,14 @@ const CMSCollectionFieldRendererComponent = ({
                                 </Button>
                             </>
                         ) : (
-                            <Card className="p-4 space-y-4 border-l-4 border-l-pink-500">
-                                {renderNestedFields(nestedValue as Record<string, any>, null)}
+                            <Card className="p-4 border-l-4 border-l-pink-500">
+                                <NestedSchemaItem
+                                    itemValue={nestedValue as Record<string, any>}
+                                    nestedFields={nestedFields}
+                                    field={field}
+                                    projectId={projectId}
+                                    onChange={handleSingleItemChange}
+                                />
                             </Card>
                         )}
                     </div>
