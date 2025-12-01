@@ -446,6 +446,7 @@ const CMSCollectionFieldRendererComponent = ({
                         maxFiles={maxFiles}
                         maxSize={configOptions?.maxSize}
                         error={!!error}
+                        projectId={projectId || ""}
                     />
                 )
 

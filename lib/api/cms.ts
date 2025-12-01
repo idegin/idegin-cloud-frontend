@@ -277,5 +277,54 @@ export const cmsApi = {
       const response = await apiClient.get<ApiResponse<{ url: string }>>(`/cms/${projectId}/files/${encodedKey}/url`)
       return response.data.data.url
     },
+
+    browse: async (projectId: string, params?: { page?: number; limit?: number; search?: string }) => {
+      const response = await apiClient.get<ApiResponse<{
+        files: Array<{
+          key: string
+          filename: string
+          size: number
+          contentType: string
+          uploadedAt: string
+          uploadedBy: string
+          metadata?: Record<string, string>
+        }>
+        total: number
+        page: number
+        totalPages: number
+        hasNext: boolean
+        hasPrev: boolean
+      }>>(`/cms/${projectId}/files/browse`, { params })
+      return response.data.data
+    },
+
+    delete: async (projectId: string, fileKeys: string[]) => {
+      const response = await apiClient.post<ApiResponse<{ deleted: number }>>(`/cms/${projectId}/files/delete`, { fileKeys })
+      return response.data.data
+    },
+
+    download: async (projectId: string, fileKey: string) => {
+      const url = await cmsApi.files.getFileUrl(projectId, fileKey)
+      window.open(url, '_blank')
+    },
+
+    upload: async (projectId: string, file: File) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      const response = await apiClient.post<ApiResponse<{
+        key: string
+        filename: string
+        size: number
+        contentType: string
+        uploadedAt: string
+        uploadedBy: string
+        metadata?: Record<string, string>
+      }>>(`/cms/${projectId}/files/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      return response.data.data
+    },
   },
 }

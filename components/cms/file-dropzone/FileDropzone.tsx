@@ -3,8 +3,9 @@
 import React, { useCallback, useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { Button } from "@/components/ui/button"
-import { Upload, X, File, Image, Video, FileText, Music, AlertCircle } from "lucide-react"
+import { Upload, X, File, Image, Video, FileText, Music, AlertCircle, FolderOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { FileBrowser, type BrowserFile } from "@/components/cms/file-browser/FileBrowser"
 
 export interface UploadedFile {
     id: string
@@ -21,6 +22,8 @@ interface FileDropzoneProps {
     disabled?: boolean
     error?: boolean
     className?: string
+    enableBrowser?: boolean
+    projectId: string
 }
 
 export function FileDropzone({
@@ -32,8 +35,11 @@ export function FileDropzone({
     disabled = false,
     error = false,
     className,
+    enableBrowser = true,
+    projectId,
 }: FileDropzoneProps) {
     const [dropError, setDropError] = useState<string | null>(null)
+    const [browserOpen, setBrowserOpen] = useState(false)
 
     const onDrop = useCallback(
         (acceptedFiles: File[], rejectedFiles: any[]) => {
@@ -67,6 +73,29 @@ export function FileDropzone({
         },
         [value, onChange, maxSize, maxFiles]
     )
+
+    const handleBrowserSelect = useCallback(
+        (selectedFiles: BrowserFile[]) => {
+            const newFiles: UploadedFile[] = selectedFiles.map((browserFile) => ({
+                id: browserFile.id,
+                file: null as any,
+                preview: browserFile.url,
+                key: browserFile.key,
+                filename: browserFile.filename,
+                url: browserFile.url,
+                size: browserFile.size,
+                contentType: browserFile.contentType,
+                uploadedAt: new Date().toISOString(),
+            }))
+
+            onChange?.([...value, ...newFiles])
+        },
+        [value, onChange]
+    )
+
+    const openBrowser = useCallback(() => {
+        setBrowserOpen(true)
+    }, [])
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
@@ -110,8 +139,8 @@ export function FileDropzone({
                 <div className="space-y-2 grid md:grid-cols-2 grid-cols-1 gap-2">
                     {value.map((uploadedFile) => {
                         const FileIcon = getFileIcon(uploadedFile)
-                        const fileType = uploadedFile.file?.type || (uploadedFile as any).contentType || ""
-                        const isImage = fileType.startsWith("image/")
+                        const filename = uploadedFile.file?.name || (uploadedFile as any).filename || ""
+                        const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(filename)
 
                         return (
                             <div
@@ -163,7 +192,14 @@ export function FileDropzone({
             {canAddMore && (
                 <>
                     <div
-                        {...getRootProps()}
+                        {...getRootProps({
+                            onClick: (e) => {
+                                if (enableBrowser) {
+                                    e.stopPropagation()
+                                    openBrowser()
+                                }
+                            }
+                        })}
                         className={cn(
                             "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
                             isDragActive && "border-primary bg-primary/5",
@@ -173,7 +209,7 @@ export function FileDropzone({
                         )}
                     >
                         <input {...getInputProps()} />
-                        <div className="flex flex-col items-center justify-center gap-2">
+                        <div className="flex flex-col items-center justify-center gap-3">
                             <div className="rounded-full bg-primary/10 p-3">
                                 <Upload className="h-6 w-6 text-primary" />
                             </div>
@@ -183,7 +219,9 @@ export function FileDropzone({
                                         ? "Drop files here"
                                         : value.length > 0 
                                             ? "Add more files" 
-                                            : "Drag & drop files here, or click to select"}
+                                            : enableBrowser
+                                                ? "Click to browse or drag & drop files here"
+                                                : "Drag & drop files here, or click to select"}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
                                     {maxFiles && `Maximum ${maxFiles} file${maxFiles > 1 ? 's' : ''}. `}
@@ -214,6 +252,18 @@ export function FileDropzone({
                 <p className="text-sm text-muted-foreground text-center py-4">
                     No files uploaded
                 </p>
+            )}
+
+            {/* File Browser Popup */}
+            {enableBrowser && projectId && (
+                <FileBrowser
+                    open={browserOpen}
+                    onOpenChange={setBrowserOpen}
+                    onSelect={handleBrowserSelect}
+                    projectId={projectId}
+                    maxFiles={maxFiles || 1}
+                    acceptTypes={accept ? Object.keys(accept) : undefined}
+                />
             )}
         </div>
     )
