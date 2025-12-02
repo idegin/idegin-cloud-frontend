@@ -81,10 +81,6 @@ export function OrganizationCard({ organization }: OrganizationCardProps) {
                     </DropdownMenu>
                 </div>
 
-                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                    Organization ID: {organization.slug}
-                </p>
-
                 <div className="flex items-center justify-between pt-5 border-t">
                     <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10 ring-2 ring-background shadow-sm">
