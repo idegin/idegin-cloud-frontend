@@ -124,10 +124,10 @@ export default function EntryDetailsPage() {
                             }
                             
                             return {
+                                ...file,
                                 id: file.key || `${fieldKey}-${index}`,
                                 file: null,
-                                preview,
-                                ...file
+                                preview
                             }
                         })
                     )
@@ -144,10 +144,10 @@ export default function EntryDetailsPage() {
                     }
                     
                     transformed[fieldKey] = {
+                        ...fileValue,
                         id: fileValue.key,
                         file: null,
-                        preview,
-                        ...fileValue
+                        preview
                     }
                 }
             }
