@@ -108,9 +108,9 @@ export default function EntryDetailsPage() {
                 if (Array.isArray(fileValue)) {
                     const transformedFiles = await Promise.all(
                         fileValue.map(async (file: any, index: number) => {
-                            let preview: string | undefined = undefined
+                            let preview: string | undefined = file.url || file.downloadURL || undefined
                             
-                            if (file.key) {
+                            if (!preview && file.key) {
                                 try {
                                     preview = await cmsApi.files.getFileUrl(projectId, file.key)
                                 } catch (error) {
@@ -128,12 +128,14 @@ export default function EntryDetailsPage() {
                     )
                     transformed[fieldKey] = transformedFiles
                 } else if (typeof fileValue === 'object' && fileValue.key) {
-                    let preview: string | undefined = undefined
+                    let preview: string | undefined = fileValue.url || fileValue.downloadURL || undefined
                     
-                    try {
-                        preview = await cmsApi.files.getFileUrl(projectId, fileValue.key)
-                    } catch (error) {
-                        console.error(`Failed to get signed URL for ${fileValue.key}:`, error)
+                    if (!preview) {
+                        try {
+                            preview = await cmsApi.files.getFileUrl(projectId, fileValue.key)
+                        } catch (error) {
+                            console.error(`Failed to get signed URL for ${fileValue.key}:`, error)
+                        }
                     }
                     
                     transformed[fieldKey] = {

@@ -255,14 +255,14 @@ function transformEntryDataForForm(entryData: Record<string, any>, fields: any[]
                 transformed[fieldKey] = fileValue.map((file: any, index: number) => ({
                     id: file.key || `${fieldKey}-${index}`,
                     file: null,
-                    preview: file.key ? `https://fly.storage.tigris.dev/${file.key}` : undefined,
+                    preview: file.url || file.downloadURL || undefined,
                     ...file
                 }))
             } else if (typeof fileValue === 'object' && fileValue.key) {
                 transformed[fieldKey] = {
                     id: fileValue.key,
                     file: null,
-                    preview: `https://fly.storage.tigris.dev/${fileValue.key}`,
+                    preview: fileValue.url || fileValue.downloadURL || undefined,
                     ...fileValue
                 }
             }
